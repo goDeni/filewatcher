@@ -1,8 +1,7 @@
 import ipaddress
 from crypt import crypt
 from hmac import compare_digest
-
-SERVER_CONFIG = "/etc/server_config.json"
+from os.path import isdir
 
 
 def enter_positive_number(message: str, enable_exit_message=True, exit_on_empty=False) -> int:
@@ -81,6 +80,20 @@ def enter_ip(message: str):
         if valid_ip(ip):
             return ip
         print("Invalid ip")
+
+
+def enter_path(message: str) -> str:
+    while True:
+        path = enter_string(message)
+        if not path:
+            return ""
+        if not path.startswith('/'):
+            print("Path is not absolute")
+            continue
+        if not isdir(path):
+            print("Invalid path")
+            continue
+        return path
 
 
 def encrypt_password(password: str) -> str:

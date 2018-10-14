@@ -2,6 +2,7 @@
 from argparse import ArgumentParser
 
 from filewatcher.server_cli import server_command
+from filewatcher.remote_cli import remote_command
 
 
 def parse_args():
@@ -26,8 +27,20 @@ def parse_args():
     parser_server.add_argument("--auto-start",
                                choices=['enable', 'disable'],
                                nargs='?')
-    parser_server.add_argument("--connect",
+
+    parser_remote = subparsers.add_parser('remote',
+                                          description="Work with remote server",
+                                          help="Work with remote server")
+    parser_remote.add_argument('--init',
                                action='store_true')
+    parser_remote.add_argument('--connect',
+                               action='store_true')
+    parser_remote.add_argument('--show-folder',
+                               action='store_true')
+    parser_remote.add_argument('--download',
+                               nargs='*')
+    parser_remote.add_argument('--upload',
+                               nargs='*')
 
     return parser.parse_args()
 
@@ -35,6 +48,8 @@ def parse_args():
 def execute_command(command: str, args):
     if command == 'server':
         server_command(args)
+    elif command == 'remote':
+        remote_command(args)
 
 
 def main():
