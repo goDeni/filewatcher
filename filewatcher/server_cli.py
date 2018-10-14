@@ -1,44 +1,18 @@
-from json import loads, dumps
 from jinja2 import Environment, PackageLoader
 from subprocess import check_call
 from os.path import isfile
+from filewatcher.utils_config import (
+    update_config,
+    read_config,
+    SERVICE_FILE,
+    DEFAULT_PORT,
+    SERVICE_FILE_NAME,
+)
 from filewatcher.utils import (
     enter_positive_number,
     enter_string,
-    enter_ip,
-    SERVER_CONFIG,
+    enter_path,
 )
-
-
-DEFAULT_PORT = 25565
-
-SERVICE_FILE_NAME = 'fwr-server.service'
-SERVICE_FILE = "/lib/systemd/system/{}".format(SERVICE_FILE_NAME)
-
-
-def read_config() -> [dict, None]:
-    try:
-        with open(SERVER_CONFIG, 'r') as file_:
-            config = loads(file_.read())
-        return config
-    except FileNotFoundError:
-        return {}
-    except PermissionError as err:
-        print(err)
-        return None
-
-
-def update_config(config_: dict, rewrite=False):
-    if not rewrite:
-        config = read_config()
-        config.update(config_)
-        config_ = config
-
-    try:
-        with open(SERVER_CONFIG, 'w') as file_:
-            file_.write(dumps(config_))
-    except PermissionError as err:
-        print(err)
 
 
 def create_service_file() -> bool:
@@ -58,33 +32,20 @@ def init_server():
     if not port:
         port = DEFAULT_PORT
     password = enter_string("Enter password: ")
+    path = enter_path("Enter absolute path: ")
+    if not path:
+        return
     update_config({
         'server': {
             'host': '0.0.0.0',
             'port': port,
             'password': password,
+            'path': path,
         }
     })
     if create_service_file():
         auto_start('enable')
         server('restart')
-
-
-def connect_server():
-    host = enter_ip("Enter server ip: ")
-    if not host:
-        return
-    port = enter_positive_number("Enter port server[{}]: ".format(DEFAULT_PORT), False, True)
-    if not port:
-        port = DEFAULT_PORT
-    password = input("Enter password: ")
-    update_config({
-        'remote': {
-            'port': port,
-            'host': host,
-            'password': password,
-        }
-    })
 
 
 def clear(delete_ob):
@@ -117,24 +78,21 @@ def auto_start(argument: str):
 def show_config():
     config = read_config()
     server_config = config.get('server')
-    remote_config = config.get('remote')
 
     if server_config:
         print("Server address: {}:{}".format(server_config['host'], server_config['port']))
-    if remote_config:
-        print("Remote server address: {}:{}".format(remote_config['host'], remote_config['port']))
+    else:
+        print("Server config doesn't exist")
 
 
 def server_command(args):
     if args.init:
         init_server()
     elif args.start or args.stop:
-        server('start' if args.start else 'stop')
+        server('restart' if args.start else 'stop')
     elif args.clear:
         clear(args.clear)
     elif args.auto_start:
         auto_start(args.auto_start)
-    elif args.connect:
-        connect_server()
     else:
         show_config()
