@@ -18,14 +18,21 @@ def read_config() -> [dict, None]:
         return None
 
 
-def update_config(config_: dict, rewrite=False):
+def update_config(config_: dict, rewrite=False, remote_=False, server_=False) -> bool:
     if not rewrite:
         config = read_config()
-        config.update(config_)
+        if remote_:
+            config['remote'].update(config_)
+        elif server_:
+            config['server'].update(config_)
+        else:
+            config.update(config_)
         config_ = config
 
     try:
         with open(SERVER_CONFIG, 'w') as file_:
             file_.write(dumps(config_))
+        return True
     except PermissionError as err:
         print(err)
+    return False

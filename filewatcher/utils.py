@@ -96,13 +96,16 @@ def enter_path(message: str) -> str:
         return path
 
 
-def encrypt_password(password: str) -> str:
+def encrypt_password(password: str, hash_=None) -> str:
     """
     Хэшируем пароль
 
+    :param hash_:
     :param password: - str
     :returns : hex str
     """
+    if hash_:
+        return crypt(password, hash_)
     return crypt(password)
 
 

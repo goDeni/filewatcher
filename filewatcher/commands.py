@@ -1,9 +1,8 @@
-import re
+from enum import Enum
 
 SIZE_POCKET = 10240
 
-SHOW_FOLDER = "SHOW_FOLDER"
 
-
-def is_show_folder(command: str) -> bool:
-    return SHOW_FOLDER == command
+class Commands(Enum):
+    SHOW_FOLDER = 1
+    LOGIN = 2

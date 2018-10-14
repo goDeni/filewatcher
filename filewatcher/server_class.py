@@ -1,10 +1,11 @@
 import os
 import socket as socket_
-from json import dumps
+from json import dumps, loads
 
 from logging import getLogger
 
-from filewatcher import commands
+from filewatcher.commands import Commands
+from filewatcher.utils import check_password
 
 log = getLogger(__name__)
 
@@ -21,6 +22,7 @@ def get_size(start_path = '.'):
 
 class ServerFwr:
     socket = socket_.socket()
+    connection = socket_.socket()
 
     def __init__(self, host, port, password, directory):
         self.host = host
@@ -33,25 +35,46 @@ class ServerFwr:
     def listen(self):
         log.info("Start listening on {}:{}".format(self.host, self.port))
         while True:
-            conn, add = self.socket.accept()
+            self.connection, add = self.socket.accept()
             try:
-                self.get_connection(conn)
+                self.connection.send(self.get_connection())
             except Exception:
                 log.exception("Error")
-            conn.close()
+            self.connection.close()
 
-    def get_connection(self, conn: socket_.socket):
-        command = conn.recv(1024).decode('utf-8')
+    def get_command(self):
+        data = self.connection.recv(1024).decode('utf-8')
+        log.warning(data)
+        data = loads(data)
+        hash_ = data['hash']
+        log.warning("hash %s", hash_)
+        log.warning("pass %s", self.password)
+        if hash_ == self.password or data['command'] == Commands.LOGIN.name:
+            return data['command'], data['args']
+        return None, None
+
+    def login(self, password: str) -> [str, False]:
+        if check_password(password, self.password):
+            return self.password
+        return False
+
+    def get_connection(self):
+        command, args = self.get_command()
+        if command is None and args is None:
+            return dumps({
+                'err': 'Invalid password'
+            }).encode('utf-8')
         res = None
-        if commands.is_show_folder(command):
+        if command == Commands.SHOW_FOLDER.name:
             res = self.show_folder()
+        elif command == Commands.LOGIN.name:
+            res = self.login(args)
 
-        if not res:
+        if res is None:
             return
-
-        conn.send(dumps({
+        return dumps({
             'response': res
-        }).encode('utf-8'))
+        }).encode('utf-8')
 
     def show_folder(self) -> list:
         directory = []

@@ -19,6 +19,8 @@ def main():
     backend.systemd_notify(backend.READY)
     try:
         server.listen()
+    except KeyboardInterrupt:
+        pass
     except Exception:
         log.exception("Error")
     server.close()
