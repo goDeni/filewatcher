@@ -1,0 +1,11 @@
+[Unit]
+After=network.target
+
+[Service]
+Type=notify
+ExecStart=/usr/local/bin/fwr-server
+Restart=always
+
+
+[Install]
+RequiredBy=network.target
