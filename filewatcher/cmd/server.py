@@ -3,7 +3,7 @@ from logging import getLogger
 
 from filewatcher import backend
 from filewatcher.server_class import ServerFwr
-from filewatcher.utils_config import SERVER_CONFIG
+from filewatcher.utils import SERVER_CONFIG
 
 log = getLogger(__name__)
 

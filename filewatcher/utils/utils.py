@@ -1,3 +1,4 @@
+import datetime
 import ipaddress
 from crypt import crypt
 from hmac import compare_digest
@@ -118,3 +119,41 @@ def check_password(password: str, password_hash: str) -> bool:
     :return: правильный ли пароль
     """
     return compare_digest(crypt(password, password_hash), password_hash)
+
+
+def format_time(time_: float) -> str:
+    """
+    Форматирует unix-time в читабельный формат
+
+    :param time_: unix-time
+    :return: дату в виде 10:00 28.08.2018
+    """
+    if not time_:
+        return "N/A"
+    date = datetime.datetime.fromtimestamp(time_)
+    return date.strftime('%H:%M %d.%m.%Y')
+
+
+def human_file_size(bytes_size: float, si_=False) -> str:
+    """
+    Перводит количество байт в человекочитаемую строку.
+
+    :param bytes_size: Количество байт
+    :param si_: СИ
+    :return:
+    """
+    thresh = 1000 if si_ else 1024
+    if abs(bytes_size) < thresh:
+        return "{} B".format(bytes_size)
+
+    units = ('kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
+    if not si_:
+        units = ('KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB')
+
+    i = -1
+
+    while abs(bytes_size >= thresh and i < len(units)-1):
+        bytes_size /= thresh
+        i += 1
+
+    return "{:.2f} {}".format(bytes_size, units[i])

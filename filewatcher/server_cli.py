@@ -2,14 +2,12 @@ from jinja2 import Environment, PackageLoader
 from subprocess import check_call
 from os.path import isfile
 from getpass import getpass
-from filewatcher.utils_config import (
+from filewatcher.utils import (
     update_config,
     read_config,
     SERVICE_FILE,
     DEFAULT_PORT,
     SERVICE_FILE_NAME,
-)
-from filewatcher.utils import (
     enter_positive_number,
     encrypt_password,
     enter_path,

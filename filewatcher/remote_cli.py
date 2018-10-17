@@ -1,7 +1,14 @@
-from filewatcher.server_cli import DEFAULT_PORT
-from filewatcher.utils import enter_positive_number, enter_ip
-from filewatcher.utils_config import update_config, read_config
 from filewatcher.client_class import ClientCommand
+from filewatcher.utils import (
+    enter_positive_number,
+    enter_ip,
+    format_time,
+    human_file_size,
+    update_config,
+    read_config,
+    DEFAULT_PORT,
+    TableRender
+)
 
 
 def init_remote():
@@ -29,10 +36,13 @@ def show_config():
 
 def show_folder(server: ClientCommand):
     directory, err = server.show_folder()
-    print(directory, err)
     if err:
         print("Invalid password")
         return
+
+    for num, file in enumerate(directory, 1):
+        type_, name, size, time_change = file
+        print("{:3} {:30}{:15}{}".format(num, name, human_file_size(size), format_time(time_change)))
 
 
 def login(server: ClientCommand):
