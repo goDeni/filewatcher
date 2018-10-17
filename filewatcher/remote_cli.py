@@ -11,14 +11,11 @@ def init_remote():
     port = enter_positive_number("Enter port server[{}]: ".format(DEFAULT_PORT), False, True)
     if not port:
         port = DEFAULT_PORT
-    password = input("Enter password: ")
     update_config({
-        'remote': {
             'port': port,
             'host': host,
-            'password': password,
-        }
-    })
+            'password': '',
+    }, remote_=True)
 
 
 def show_config():
@@ -30,21 +27,36 @@ def show_config():
         print("Remote server config doesnt exist")
 
 
-def show_folder(directory_list: list):
-    print(directory_list)
+def show_folder(server: ClientCommand):
+    directory, err = server.show_folder()
+    print(directory, err)
+    if err:
+        print("Invalid password")
+        return
+
+
+def login(server: ClientCommand):
+    hash_ = server.login()
+    if not hash_:
+        hash_ = ''
+        print("Invalid password")
+
+    if update_config({'password': hash_}, remote_=True) and hash_:
+        print("You are successfully authorized!")
 
 
 def remote_command(args):
     if args.init:
         init_remote()
-    if True in [args.connect, args.show_folder, args.download, args.upload]:
+    if True in [args.connect, args.show_folder, args.download, args.upload, args.login]:
         config = read_config().get('remote')
         if not config:
             print("Remote server config doesn't exist")
             return
         server = ClientCommand(config['host'], config['port'], config['password'])
         if args.show_folder:
-            show_folder(server.show_folder())
-
+            show_folder(server)
+        elif args.login:
+            login(server)
     else:
         show_config()

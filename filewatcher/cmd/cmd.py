@@ -41,6 +41,8 @@ def parse_args():
                                nargs='*')
     parser_remote.add_argument('--upload',
                                nargs='*')
+    parser_remote.add_argument('--login',
+                               action='store_true')
 
     return parser.parse_args()
 

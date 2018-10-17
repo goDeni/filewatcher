@@ -1,6 +1,7 @@
 from jinja2 import Environment, PackageLoader
 from subprocess import check_call
 from os.path import isfile
+from getpass import getpass
 from filewatcher.utils_config import (
     update_config,
     read_config,
@@ -10,7 +11,7 @@ from filewatcher.utils_config import (
 )
 from filewatcher.utils import (
     enter_positive_number,
-    enter_string,
+    encrypt_password,
     enter_path,
 )
 
@@ -31,7 +32,7 @@ def init_server():
     port = enter_positive_number("Enter port[{}]: ".format(DEFAULT_PORT), False, True)
     if not port:
         port = DEFAULT_PORT
-    password = enter_string("Enter password: ")
+    password = encrypt_password(getpass("Enter password: "))
     path = enter_path("Enter absolute path: ")
     if not path:
         return
