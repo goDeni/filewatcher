@@ -1,13 +1,13 @@
 from filewatcher.client_class import ClientCommand
 from filewatcher.utils import (
     enter_positive_number,
-    enter_ip,
-    format_time,
     human_file_size,
     update_config,
     read_config,
     DEFAULT_PORT,
-    TableRender
+    enter_ip,
+    TableRender,
+    format_time,
 )
 
 
@@ -34,15 +34,38 @@ def show_config():
         print("Remote server config doesnt exist")
 
 
-def show_folder(server: ClientCommand):
-    directory, err = server.show_folder()
-    if err:
-        print("Invalid password")
-        return
+def show_folder(server: ClientCommand, folders_to_show: list):
+    if not folders_to_show:
+        folders_to_show.append('.')
 
-    for num, file in enumerate(directory, 1):
-        type_, name, size, time_change = file
-        print("{:3} {:30}{:15}{}".format(num, name, human_file_size(size), format_time(time_change)))
+    for folder in folders_to_show:
+        directory, err = server.show_folder(folder)
+        if err:
+            print(err)
+            continue
+
+        files, folders = directory['files'], directory['folders']
+        table = TableRender()
+        num = 0
+
+        for num, file in enumerate(sorted(folders, key=lambda a: a[0]), 1):
+            name, size, time_change = file
+            table.write_in_column("№", num)
+            table.write_in_column("NAME", name)
+            table.write_in_column("TYPE", "FOLDER")
+            table.write_in_column("SIZE", human_file_size(size))
+            table.write_in_column("TIME-CHANGE", format_time(time_change))
+
+        for name, size, time_change in sorted(files, key=lambda a: a[0]):
+            num += 1
+            table.write_in_column("№", num)
+            table.write_in_column("NAME", name)
+            table.write_in_column("TYPE", "FILE")
+            table.write_in_column("SIZE", human_file_size(size))
+            table.write_in_column("TIME-CHANGE", format_time(time_change))
+
+        print("Folder", folder)
+        print(table.render() if num else "Empty", '\n')
 
 
 def login(server: ClientCommand):
@@ -58,14 +81,14 @@ def login(server: ClientCommand):
 def remote_command(args):
     if args.init:
         init_remote()
-    if True in [args.connect, args.show_folder, args.download, args.upload, args.login]:
+    if True in [args.connect, args.show_folder is not None, args.download, args.upload, args.login]:
         config = read_config().get('remote')
         if not config:
             print("Remote server config doesn't exist")
             return
         server = ClientCommand(config['host'], config['port'], config['password'])
-        if args.show_folder:
-            show_folder(server)
+        if args.show_folder is not None:
+            show_folder(server, args.show_folder)
         elif args.login:
             login(server)
     else:

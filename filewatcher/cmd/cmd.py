@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 from argparse import ArgumentParser
 
 from filewatcher.server_cli import server_command
@@ -36,21 +37,24 @@ def parse_args():
     parser_remote.add_argument('--connect',
                                action='store_true')
     parser_remote.add_argument('--show-folder',
-                               action='store_true')
+                               nargs='*')
     parser_remote.add_argument('--download',
                                nargs='*')
     parser_remote.add_argument('--upload',
                                nargs='*')
     parser_remote.add_argument('--login',
                                action='store_true')
-
-    return parser.parse_args()
+    args = sys.argv[1:]
+    if args and args[0] != 'server':
+        args = ['remote'] + args
+    return parser.parse_args(args)
 
 
 def execute_command(command: str, args):
+    print(args)
     if command == 'server':
         server_command(args)
-    elif command == 'remote':
+    else:
         remote_command(args)
 
 

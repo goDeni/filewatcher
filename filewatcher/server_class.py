@@ -3,6 +3,7 @@ import socket as socket_
 from json import dumps, loads
 
 from logging import getLogger
+from typing import Dict, Tuple, Any
 
 from filewatcher.commands import Commands
 from filewatcher.utils import check_password
@@ -65,37 +66,45 @@ class ServerFwr:
                 'err': 'Invalid password'
             }).encode('utf-8')
         res = None
+        error = None
         if command == Commands.SHOW_FOLDER.name:
-            res = self.show_folder()
+            res, error = self.show_folder(args)
         elif command == Commands.LOGIN.name:
             res = self.login(args)
 
-        if res is None:
+        if res is None and error is None:
             return
         return dumps({
-            'response': res
+            'response': res,
+            'err': error
         }).encode('utf-8')
 
-    def show_folder(self) -> list:
-        directory = []
-        for dir_name in os.listdir(self.directory):
-            path = os.path.join(self.directory, dir_name)
-            log.warning(path)
+    def show_folder(self, folder) -> tuple:
+        directory = {'files': [], 'folders': []}
+
+        path_directory = self.directory
+        if folder != '.':
+            path_directory = os.path.join(path_directory, folder)
+
+        if not os.path.isdir(path_directory):
+            return None, "Invalid path /{}".format(folder)
+
+        for dir_name in os.listdir(path_directory):
+            path = os.path.join(path_directory, dir_name)
+            # log.warning(path)
             if os.path.isdir(path):
-                directory.append([
-                    "FOLDER",
+                directory['folders'].append([
                     dir_name,
                     get_size(path),
                     os.path.getmtime(path),
                 ])
             elif os.path.isfile(path):
-                directory.append([
-                    "FILE",
+                directory['files'].append([
                     dir_name,
                     os.path.getsize(path),
                     os.path.getmtime(path)
                 ])
-        return directory
+        return directory, None
 
     def close(self):
         self.socket.close()
