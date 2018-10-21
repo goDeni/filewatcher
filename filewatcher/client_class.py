@@ -3,7 +3,14 @@ import socket as socket_
 from json import loads, dumps
 from getpass import getpass
 
-from filewatcher.commands import Commands, SIZE_POCKET
+from filewatcher.commands import Commands
+from filewatcher.utils.socket_utils import (
+    download_file,
+    download_folder,
+    SIZE_POCKET,
+    send_file,
+    send_folder,
+)
 
 
 class ClientCommand:
@@ -55,7 +62,7 @@ class ClientCommand:
         self.send_command(Commands.DOWNLOAD.name, path_from, close_conn=False, wait_res=False)
         response = None
 
-        res = loads(self.socket.recv(10240).decode('utf-8'))
+        res = loads(self.socket.recv(SIZE_POCKET * 10).decode('utf-8'))
 
         if res.get('isfile'):
             filename, size = res.get('filename'), res.get('size')
@@ -67,46 +74,29 @@ class ClientCommand:
             response = {'err': ("Unknown response '{}'".format(res) if not res.get('err') else res.get('err'))}
 
         if not response:
-            response = loads(self.socket.recv(1024).decode('utf-8'))
+            response = loads(self.socket.recv(SIZE_POCKET).decode('utf-8'))
 
         self.close()
         return response
 
-    def upload(self):
-        pass
+    def upload(self, path_source, path_dist) -> dict:
+        if self.is_close:
+            self.connect()
+
+        if os.path.isfile(path_source):
+            send_file(self.socket, path_source, path_source, path_dist, this_command=True, kwargs={
+                'command': Commands.UPLOAD.name,
+                'hash': self.password,
+            })
+        elif os.path.isdir(path_source):
+            send_folder(self.socket, ('', path_source), path_source, path_dist, this_command=True, kwargs={
+                'command': Commands.UPLOAD.name,
+                'hash': self.password,
+            })
+        res = loads(self.socket.recv(SIZE_POCKET).decode('utf-8'))
+        self.close()
+        return res
 
     def login(self):
         password = getpass("Enter password: ")
         return self.send_command(Commands.LOGIN.name, password, timeout=60)['response']
-
-
-def download_file(socket: socket_.socket, size, download_path):
-    print("Downloading", download_path)
-    with open(download_path, 'wb') as file_:
-        socket.send('1'.encode('utf-8'))
-        downloaded_data = 0
-        pocket_size = SIZE_POCKET
-        while size:
-            data = socket.recv(min(pocket_size, size))
-            size -= len(data)
-            downloaded_data += len(data)
-            file_.write(data)
-
-
-def download_folder(socket: socket_.socket, three: list, download_path: str, count_files: int):
-    if not os.path.isdir(download_path):
-        os.makedirs(download_path)
-
-    path, download_folder = os.path.split(download_path)
-    for path_d in three:
-        if not os.path.isdir(os.path.join(path, path_d)):
-            os.makedirs(os.path.join(path, path_d))
-    socket.send('1'.encode('utf-8'))
-    while count_files:
-        file_info = loads(socket.recv(1024).decode('utf-8'))
-        size, path, filename = file_info.get('size'), file_info.get('path'), file_info.get('filename')
-        if None in [size, path, filename]:
-            print("Download error", file_info)
-        else:
-            download_file(socket, size, os.path.join(download_path, path, filename))
-        count_files -= 1

@@ -4,14 +4,16 @@ from json import dumps, loads
 
 from logging import getLogger
 
-from filewatcher.commands import Commands, SIZE_POCKET
+from filewatcher.commands import Commands
 from filewatcher.utils import (
     check_password,
     get_folder_size,
-    get_three,
-    get_count_files,
-    get_files,
+    send_folder,
+    send_file,
+    download_file,
+    download_folder,
 )
+from filewatcher.utils.socket_utils import SIZE_POCKET
 
 log = getLogger(__name__)
 
@@ -39,7 +41,7 @@ class ServerFwr:
             self.connection.close()
 
     def get_command(self):
-        data = self.connection.recv(1024).decode('utf-8')
+        data = self.connection.recv(SIZE_POCKET*10).decode('utf-8')
         data = loads(data)
         hash_ = data['hash']
         if hash_ == self.password or data['command'] == Commands.LOGIN.name:
@@ -65,7 +67,9 @@ class ServerFwr:
             res = self.login(args)
         elif command == Commands.DOWNLOAD.name:
             res, error = self.download(args)
-
+        elif command == Commands.UPLOAD.name:
+            log.warning("UPLOAD")
+            res, error = self.upload(args)
         if res is None and error is None:
             return
         return dumps({
@@ -119,41 +123,18 @@ class ServerFwr:
         else:
             return None, "Invalid path"
 
-
-def send_file(socket: socket_.socket, download_path: str, filename: str, path=''):
-    socket.send(dumps({
-        'filename': filename,
-        'path': path,
-        'size': os.path.getsize(download_path),
-        'isfile': True,
-    }).encode('utf-8'))
-    res = socket.recv(1024).decode('utf-8')
-    if not res:
-        return "Success flag didn't receive"
-    with open(download_path, 'rb') as file_:
-        data = file_.read(SIZE_POCKET)
-        while data:
-            socket.send(data)
-            data = file_.read(SIZE_POCKET)
-
-    return 1
-
-
-def send_folder(socket: socket_.socket, download_path: tuple, foldername: str, path=''):
-    socket.send(dumps({
-        'foldername': foldername,
-        'path': path,
-        'isfolder': True,
-        'three': get_three(download_path[0], download_path[1]),
-        'count_files': get_count_files(os.path.join(download_path[0], download_path[1])),
-    }).encode('utf-8'))
-
-    res = socket.recv(1024).decode('utf-8')
-    if not res:
-        return "Success flag didn't receive"
-    download_path = os.path.join(download_path[0], download_path[1])
-    for file in get_files(download_path):
-        path_f, filename = os.path.split(file[len(download_path)+1:])
-        send_file(socket, file, filename, path_f)
-
-    return 1
+    def upload(self, path_info: dict):
+        if path_info.get('isfile'):
+            size, path, filename = path_info.get('size'), path_info.get('path'), path_info.get('filename')
+            if not os.path.isdir(os.path.join(self.directory, path)):
+                return None, "Invalid path"
+            download_file(self.connection, size, os.path.join(self.directory, path, filename))
+            return 1, None
+        elif path_info.get('isfolder'):
+            foldername, three, path, count_files = path_info.get('foldername'), path_info.get('three'), path_info.get('path'), path_info.get('count_files')
+            if path == '.':
+                path = ''
+            three = [os.path.join(self.directory, a) for a in three]
+            download_folder(self.connection, three, os.path.join(self.directory, foldername, path), count_files)
+            return 1, None
+        return None, "Invalid path info {}".format(path_info)

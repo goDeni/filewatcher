@@ -171,7 +171,9 @@ def get_folder_size(start_path ='.'):
 
 
 def get_three(root: str, folder: str):
-    num = len(root)+1
+    num = len(root)
+    if num != 0:
+        num += 1
     return [a[0][num:] for a in os.walk(os.path.join(root, folder))][1:]
 
 

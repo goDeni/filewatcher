@@ -41,7 +41,7 @@ def parse_args():
     parser_remote.add_argument('--download',
                                nargs='+')
     parser_remote.add_argument('--upload',
-                               nargs='*')
+                               nargs='+')
     parser_remote.add_argument('--login',
                                action='store_true')
     args = sys.argv[1:]

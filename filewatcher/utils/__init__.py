@@ -22,3 +22,9 @@ from filewatcher.utils.utils_config import (
     read_config,
     update_config,
 )
+from filewatcher.utils.socket_utils import (
+    send_file,
+    send_folder,
+    download_file,
+    download_folder,
+)
