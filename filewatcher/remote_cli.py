@@ -1,3 +1,5 @@
+import os
+
 from filewatcher.client_class import ClientCommand
 from filewatcher.utils import (
     enter_positive_number,
@@ -78,10 +80,27 @@ def login(server: ClientCommand):
         print("You are successfully authorized!")
 
 
+def download(server: ClientCommand, args: list):
+    path_from = args[:-1] if len(args) > 1 else [args[-1]]
+    path_to = args[-1] if len(args) > 1 else os.path.abspath('')
+
+    if not os.path.isdir(path_to):
+        print("Invalid destination path")
+        return
+
+    for path in path_from:
+        res = server.download(path, path_to)
+        res, err = res.get('response'), res.get('err')
+        if err:
+            print("Error:", err)
+        if res:
+            print("Successful download", path, '\n')
+
+
 def remote_command(args):
     if args.init:
         init_remote()
-    if True in [args.connect, args.show_folder is not None, args.download, args.upload, args.login]:
+    if True in [args.connect, args.show_folder is not None, args.download is not None, args.upload, args.login]:
         config = read_config().get('remote')
         if not config:
             print("Remote server config doesn't exist")
@@ -89,6 +108,8 @@ def remote_command(args):
         server = ClientCommand(config['host'], config['port'], config['password'])
         if args.show_folder is not None:
             show_folder(server, args.show_folder)
+        elif args.download is not None:
+            download(server, args.download)
         elif args.login:
             login(server)
     else:

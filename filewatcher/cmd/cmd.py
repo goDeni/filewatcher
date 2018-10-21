@@ -39,7 +39,7 @@ def parse_args():
     parser_remote.add_argument('--show-folder',
                                nargs='*')
     parser_remote.add_argument('--download',
-                               nargs='*')
+                               nargs='+')
     parser_remote.add_argument('--upload',
                                nargs='*')
     parser_remote.add_argument('--login',
@@ -54,7 +54,7 @@ def execute_command(command: str, args):
     print(args)
     if command == 'server':
         server_command(args)
-    else:
+    elif command == 'remote':
         remote_command(args)
 
 

@@ -1,5 +1,6 @@
 import datetime
 import ipaddress
+import os
 from crypt import crypt
 from hmac import compare_digest
 from os.path import isdir
@@ -157,3 +158,28 @@ def human_file_size(bytes_size: float, si_=False) -> str:
         i += 1
 
     return "{:.2f} {}".format(bytes_size, units[i])
+
+
+def get_folder_size(start_path ='.'):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            if os.path.isfile(fp):
+                total_size += os.path.getsize(fp)
+    return total_size
+
+
+def get_three(root: str, folder: str):
+    num = len(root)+1
+    return [a[0][num:] for a in os.walk(os.path.join(root, folder))][1:]
+
+
+def get_count_files(dir: str):
+    return sum([len(a[2]) for a in os.walk(os.path.join(dir))])
+
+
+def get_files(dir: str):
+    for path, dirs, files in os.walk(dir):
+        for file in files:
+            yield os.path.join(path, file)

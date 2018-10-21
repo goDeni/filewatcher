@@ -23,7 +23,8 @@ def main():
         pass
     except Exception:
         log.exception("Error")
-    server.close()
+    finally:
+        server.close()
 
 
 if __name__ == "__main__":
