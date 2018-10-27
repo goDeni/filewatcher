@@ -41,7 +41,7 @@ class ServerFwr:
             self.connection.close()
 
     def get_command(self):
-        data = self.connection.recv(SIZE_POCKET*10).decode('utf-8')
+        data = self.connection.recv(SIZE_POCKET).decode('utf-8')
         data = loads(data)
         hash_ = data['hash']
         if hash_ == self.password or data['command'] == Commands.LOGIN.name:
@@ -68,7 +68,6 @@ class ServerFwr:
         elif command == Commands.DOWNLOAD.name:
             res, error = self.download(args)
         elif command == Commands.UPLOAD.name:
-            log.warning("UPLOAD")
             res, error = self.upload(args)
         if res is None and error is None:
             return
@@ -131,10 +130,10 @@ class ServerFwr:
             download_file(self.connection, size, os.path.join(self.directory, path, filename))
             return 1, None
         elif path_info.get('isfolder'):
-            foldername, three, path, count_files = path_info.get('foldername'), path_info.get('three'), path_info.get('path'), path_info.get('count_files')
+            foldername, path, count_files = path_info.get('foldername'), path_info.get('path'), path_info.get('count_files')
             if path == '.':
                 path = ''
-            three = [os.path.join(self.directory, a) for a in three]
-            download_folder(self.connection, three, os.path.join(self.directory, foldername, path), count_files)
+
+            download_folder(self.connection, os.path.join(self.directory, path, foldername), count_files)
             return 1, None
         return None, "Invalid path info {}".format(path_info)

@@ -27,6 +27,9 @@ def send_file(socket: socket_.socket, download_path: str, filename: str, path=''
     res = socket.recv(SIZE_POCKET).decode('utf-8')
     if not res:
         return "Success flag didn't receive"
+    elif len(res) > 1:
+        return loads(res)
+
     with open(download_path, 'rb') as file_:
         data = file_.read(SIZE_POCKET)
         while data:
@@ -37,11 +40,11 @@ def send_file(socket: socket_.socket, download_path: str, filename: str, path=''
 
 
 def send_folder(socket: socket_.socket, download_path: tuple, foldername: str, path='', this_command=False, kwargs=None):
+    print("path_to", path)
     folder_info = {
         'foldername': foldername,
         'path': path,
         'isfolder': True,
-        'three': get_three(download_path[0], download_path[1]),
         'count_files': get_count_files(os.path.join(download_path[0], download_path[1])),
     }
     if this_command and isinstance(kwargs, dict):
@@ -49,8 +52,12 @@ def send_folder(socket: socket_.socket, download_path: tuple, foldername: str, p
 
     socket.send(dumps(folder_info).encode('utf-8'))
     res = socket.recv(SIZE_POCKET).decode('utf-8')
+
     if not res:
         return "Success flag didn't receive"
+    elif len(res) > 1:
+        return loads(res)
+
     download_path = os.path.join(download_path[0], download_path[1])
     for file in get_files(download_path):
         path_f, filename = os.path.split(file[len(download_path)+1:])
@@ -61,7 +68,8 @@ def send_folder(socket: socket_.socket, download_path: tuple, foldername: str, p
 
 def download_file(socket: socket_.socket, size: int, download_path: str):
     print("Downloading", download_path)
-    log.warning("Download path %s, size %s", download_path, size)
+    log.warning("Downloading %s", download_path)
+    socket.settimeout(10)
     with open(download_path, 'wb') as file_:
         socket.send('1'.encode('utf-8'))
         downloaded_data = 0
@@ -73,14 +81,16 @@ def download_file(socket: socket_.socket, size: int, download_path: str):
             file_.write(data)
 
 
-def download_folder(socket: socket_.socket, three: list, download_path: str, count_files: int):
-    if not os.path.isdir(download_path):
+def download_folder(socket: socket_.socket, download_path: str, count_files: int):
+    if not os.path.exists(download_path):
         os.makedirs(download_path)
+    elif not os.path.isdir(download_path):
+        socket.send(dumps({
+            'res': '',
+            'err': 'Invalid path'
+        }).encode('utf-8'))
+        return 0
 
-    path, download_folder = os.path.split(download_path)
-    for path_d in three:
-        if not os.path.isdir(os.path.join(path, path_d)):
-            os.makedirs(os.path.join(path, path_d))
     socket.send('1'.encode('utf-8'))
     while count_files:
         file_info = loads(socket.recv(SIZE_POCKET).decode('utf-8'))
@@ -89,5 +99,9 @@ def download_folder(socket: socket_.socket, three: list, download_path: str, cou
             print("Download error", file_info)
             log.error("Download error %s", file_info)
         else:
-            download_file(socket, size, os.path.join(download_path, path, filename))
+            path_tmp = os.path.join(download_path, path)
+            if not os.path.isdir(path_tmp):
+                os.makedirs(path_tmp)
+            download_file(socket, size, os.path.join(path_tmp, filename))
         count_files -= 1
+    return 1
