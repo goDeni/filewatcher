@@ -42,7 +42,10 @@ def client_command(func):
             print("Remote server config doesn't exist")
             return
         server = ClientCommand(config['host'], config['port'], config['password'])
-        return func(server, *args, **kwargs)
+        try:
+            return func(server, *args, **kwargs)
+        except KeyboardInterrupt:
+            server.close()
     return wrrapper
 
 
@@ -64,7 +67,6 @@ def init_remote():
 
 def show_config():
     remote_config = read_config(remote=True)
-    # print(remote_config)
     if remote_config:
         print("Remote server address: {}:{}".format(remote_config.get('host'), remote_config.get('port')))
         print("Synchronize:", 'Enabled' if remote_config.get('synchronize') else 'Disabled')
@@ -155,8 +157,7 @@ def upload(server: ClientCommand, args: list):
             print("{} uploaded".format(path))
 
 
-@client_command
-def synchronize(unused, status: str):
+def synchronize(status: str):
     if not create_service_file_synchronizer():
         return
 
@@ -166,7 +167,7 @@ def synchronize(unused, status: str):
     if status:
         path_to_watch = enter_path('Enter absolute path to watching: ')
 
-    update_config({'synchronize': status, 'synchronize-path': path_to_watch})
+    update_config({'synchronize': status, 'synchronize-path': path_to_watch}, remote_=True)
 
     check_call(['systemctl', 'enable' if status else 'disable', SERVICE_FILE_FWR_SYNC_NAME])
     check_call(['systemctl', 'start' if status else 'stop', SERVICE_FILE_FWR_SYNC_NAME])
@@ -186,6 +187,11 @@ def delete(server: ClientCommand, delete_objects: list):
             print(delete_obj, "Deleted")
 
 
+def synchronize_all():
+    print("Synchronizing...")
+    check_call(['systemctl', 'restart', SERVICE_FILE_FWR_SYNC_NAME])
+
+
 def remote_command(args):
     if args.init:
         init_remote()
@@ -199,6 +205,8 @@ def remote_command(args):
         login()
     elif args.synchronize:
         synchronize(args.synchronize)
+    elif args.synchronize_all:
+        synchronize_all()
     elif args.delete:
         delete(args.delete)
     else:

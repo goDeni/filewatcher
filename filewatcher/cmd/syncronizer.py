@@ -17,13 +17,14 @@ def main():
 
     status, path_to_watch = CONFIGURATION.get('synchronize'), CONFIGURATION.get('synchronize-path')
 
+    log.warning(CONFIGURATION)
     if not status:
         backend.systemd_notify(backend.READY)
         log.warning("Synchronize status: %s", status)
         return
 
     wm = pyinotify.WatchManager()
-    wm.add_watch(path_to_watch, pyinotify.ALL_EVENTS, rec=True)
+    wm.add_watch(path_to_watch, pyinotify.ALL_EVENTS, rec=True, auto_add=True)
 
     host = CONFIGURATION['host']
     port = int(CONFIGURATION['port'])

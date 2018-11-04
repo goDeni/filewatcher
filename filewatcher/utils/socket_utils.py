@@ -4,11 +4,11 @@ from json import dumps, loads
 from logging import getLogger
 
 from filewatcher.utils import (
-    get_three,
     get_count_files,
     get_files,
 )
 SIZE_POCKET = 1024
+TIMEOUT = 10
 
 log = getLogger(__name__)
 
@@ -40,7 +40,6 @@ def send_file(socket: socket_.socket, download_path: str, filename: str, path=''
 
 
 def send_folder(socket: socket_.socket, download_path: tuple, foldername: str, path='', this_command=False, kwargs=None):
-    print("path_to", path)
     folder_info = {
         'foldername': foldername,
         'path': path,
@@ -69,13 +68,14 @@ def send_folder(socket: socket_.socket, download_path: tuple, foldername: str, p
 def download_file(socket: socket_.socket, size: int, download_path: str):
     print("Downloading", download_path)
     log.warning("Downloading %s", download_path)
-    socket.settimeout(10)
     with open(download_path, 'wb') as file_:
         socket.send('1'.encode('utf-8'))
         downloaded_data = 0
         pocket_size = SIZE_POCKET
         while size:
             data = socket.recv(min(pocket_size, size))
+            if not data:
+                raise ConnectionError("Downloading file error")
             size -= len(data)
             downloaded_data += len(data)
             file_.write(data)

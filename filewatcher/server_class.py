@@ -14,8 +14,6 @@ from filewatcher.utils import (
     send_file,
     download_file,
     download_folder,
-    read_config,
-    update_config,
 )
 from filewatcher.utils.socket_utils import SIZE_POCKET
 
@@ -38,6 +36,7 @@ class ServerFwr:
         log.info("Start listening on {}:{}".format(self.host, self.port))
         while True:
             self.connection, add = self.socket.accept()
+            self.connection.settimeout(10)
             try:
                 self.connection.send(self.get_connection())
             except Exception:

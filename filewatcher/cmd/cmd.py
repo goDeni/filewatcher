@@ -51,6 +51,8 @@ def parse_args():
     parser_remote.add_argument('--synchronize',
                                choices=['enable', 'disable'],
                                nargs='?')
+    parser_remote.add_argument('--synchronize-all',
+                               action='store_true')
 
     args = sys.argv[1:]
     if args and args[0] != 'server':

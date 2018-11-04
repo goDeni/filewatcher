@@ -12,7 +12,7 @@ CONFIGURATION = read_config(server=True)
 def main():
     args = backend.default_arg_parser(__name__)
     backend.setup_logging(args.debug)
-
+    # sudo chmod -R a+rwx <folder>
     server = ServerFwr(CONFIGURATION['host'], CONFIGURATION['port'], CONFIGURATION['password'], CONFIGURATION['path'])
     backend.systemd_notify(backend.READY)
     try:

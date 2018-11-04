@@ -57,7 +57,6 @@ class ClientCommand:
         }).encode('utf-8'))
         if wait_res:
             response = self.socket.recv(SIZE_POCKET)
-            # print(response, command, args)
             if close_conn:
                 self.close()
             return loads(response.decode('utf-8'))
@@ -91,15 +90,16 @@ class ClientCommand:
         return response
 
     @reopen_client
-    def upload(self, path_source, path_dist) -> dict:
+    def upload(self, path_source: str, path_dist: str) -> dict:
         res = None
+        path, name = os.path.split(path_source)
         if os.path.isfile(path_source):
-            res = send_file(self.socket, path_source, path_source, path_dist, this_command=True, kwargs={
+            res = send_file(self.socket, path_source, name, path_dist, this_command=True, kwargs={
                 'command': Commands.UPLOAD.name,
                 'hash': self.password,
             })
         elif os.path.isdir(path_source):
-            res = send_folder(self.socket, ('', path_source), path_source, path_dist, this_command=True, kwargs={
+            res = send_folder(self.socket, ('', path_source), name, path_dist, this_command=True, kwargs={
                 'command': Commands.UPLOAD.name,
                 'hash': self.password,
             })
@@ -112,9 +112,7 @@ class ClientCommand:
 
     @reopen_client
     def delete(self, delete_obj: str) -> dict:
-        res = self.send_command(Commands.DELETE.name, delete_obj)
-        print(res)
-        return res
+        return self.send_command(Commands.DELETE.name, delete_obj)
 
     def login(self):
         password = getpass("Enter password: ")
