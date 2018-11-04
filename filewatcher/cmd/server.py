@@ -1,20 +1,18 @@
-from json import loads
 from logging import getLogger
 
 from filewatcher import backend
 from filewatcher.server_class import ServerFwr
-from filewatcher.utils_config import SERVER_CONFIG
+from filewatcher.utils import read_config
 
 log = getLogger(__name__)
 
-with open(SERVER_CONFIG, 'r') as file_:
-    CONFIGURATION = loads(file_.read()).get('server')
+CONFIGURATION = read_config(server=True)
 
 
 def main():
     args = backend.default_arg_parser(__name__)
     backend.setup_logging(args.debug)
-
+    # sudo chmod -R a+rwx <folder>
     server = ServerFwr(CONFIGURATION['host'], CONFIGURATION['port'], CONFIGURATION['password'], CONFIGURATION['path'])
     backend.systemd_notify(backend.READY)
     try:
@@ -23,7 +21,8 @@ def main():
         pass
     except Exception:
         log.exception("Error")
-    server.close()
+    finally:
+        server.close()
 
 
 if __name__ == "__main__":

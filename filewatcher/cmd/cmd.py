@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 from argparse import ArgumentParser
 
 from filewatcher.server_cli import server_command
@@ -27,24 +28,36 @@ def parse_args():
     parser_server.add_argument("--auto-start",
                                choices=['enable', 'disable'],
                                nargs='?')
+    parser_server.add_argument('--show-config',
+                               action='store_true')
 
     parser_remote = subparsers.add_parser('remote',
                                           description="Work with remote server",
                                           help="Work with remote server")
     parser_remote.add_argument('--init',
                                action='store_true')
-    parser_remote.add_argument('--connect',
-                               action='store_true')
-    parser_remote.add_argument('--show-folder',
-                               action='store_true')
-    parser_remote.add_argument('--download',
-                               nargs='*')
-    parser_remote.add_argument('--upload',
-                               nargs='*')
     parser_remote.add_argument('--login',
                                action='store_true')
+    parser_remote.add_argument('--show-folder',
+                               nargs='*')
+    parser_remote.add_argument('--delete',
+                               nargs='+')
+    parser_remote.add_argument('--show-config',
+                               action='store_true')
+    parser_remote.add_argument('--download',
+                               nargs='+')
+    parser_remote.add_argument('--upload',
+                               nargs='+')
+    parser_remote.add_argument('--synchronize',
+                               choices=['enable', 'disable'],
+                               nargs='?')
+    parser_remote.add_argument('--synchronize-all',
+                               action='store_true')
 
-    return parser.parse_args()
+    args = sys.argv[1:]
+    if args and args[0] != 'server':
+        args = ['remote'] + args
+    return parser.parse_args(args)
 
 
 def execute_command(command: str, args):

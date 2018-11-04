@@ -7,12 +7,13 @@ setup(
     description='PO-411',
     packages=find_packages('.'),
     install_requires=[
-        'systemd', 'jinja2'
+        'systemd', 'jinja2', 'pyinotify'
     ],
     entry_points={
         'console_scripts': [
             'fwr = filewatcher.cmd.cmd:main',
             'fwr-server = filewatcher.cmd.server:main',
+            'fwr-sync = filewatcher.cmd.syncronizer:main'
         ]
     },
 )

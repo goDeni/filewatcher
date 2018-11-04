@@ -1,0 +1,11 @@
+[Unit]
+After=network.target
+
+[Service]
+Type=notify
+ExecStart=/usr/local/bin/fwr-sync
+Restart=on-failure
+
+
+[Install]
+RequiredBy=network.target

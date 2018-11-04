@@ -1,4 +1,6 @@
+import datetime
 import ipaddress
+import os
 from crypt import crypt
 from hmac import compare_digest
 from os.path import isdir
@@ -118,3 +120,68 @@ def check_password(password: str, password_hash: str) -> bool:
     :return: правильный ли пароль
     """
     return compare_digest(crypt(password, password_hash), password_hash)
+
+
+def format_time(time_: float) -> str:
+    """
+    Форматирует unix-time в читабельный формат
+
+    :param time_: unix-time
+    :return: дату в виде 10:00 28.08.2018
+    """
+    if not time_:
+        return "N/A"
+    date = datetime.datetime.fromtimestamp(time_)
+    return date.strftime('%H:%M %d.%m.%Y')
+
+
+def human_file_size(bytes_size: float, si_=False) -> str:
+    """
+    Перводит количество байт в человекочитаемую строку.
+
+    :param bytes_size: Количество байт
+    :param si_: СИ
+    :return:
+    """
+    thresh = 1000 if si_ else 1024
+    if abs(bytes_size) < thresh:
+        return "{} B".format(bytes_size)
+
+    units = ('kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
+    if not si_:
+        units = ('KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB')
+
+    i = -1
+
+    while abs(bytes_size >= thresh and i < len(units)-1):
+        bytes_size /= thresh
+        i += 1
+
+    return "{:.2f} {}".format(bytes_size, units[i])
+
+
+def get_folder_size(start_path ='.'):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            if os.path.isfile(fp):
+                total_size += os.path.getsize(fp)
+    return total_size
+
+
+def get_three(root: str, folder: str):
+    num = len(root)
+    if num != 0:
+        num += 1
+    return [a[0][num:] for a in os.walk(os.path.join(root, folder))][1:]
+
+
+def get_count_files(dir: str):
+    return sum([len(a[2]) for a in os.walk(os.path.join(dir))])
+
+
+def get_files(dir: str):
+    for path, dirs, files in os.walk(dir):
+        for file in files:
+            yield os.path.join(path, file)
