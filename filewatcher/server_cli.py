@@ -5,9 +5,9 @@ from getpass import getpass
 from filewatcher.utils import (
     update_config,
     read_config,
-    SERVICE_FILE,
+    SERVICE_FILE_FWR_SERVER,
     DEFAULT_PORT,
-    SERVICE_FILE_NAME,
+    SERVICE_FILE_FWR_SERVER_NAME,
     enter_positive_number,
     encrypt_password,
     enter_path,
@@ -16,9 +16,9 @@ from filewatcher.utils import (
 
 def create_service_file() -> bool:
     environment = Environment(loader=PackageLoader('filewatcher', 'templates'))
-    service_file = environment.get_template(SERVICE_FILE_NAME).render()
+    service_file = environment.get_template(SERVICE_FILE_FWR_SERVER_NAME).render()
     try:
-        with open(SERVICE_FILE, 'w') as file_:
+        with open(SERVICE_FILE_FWR_SERVER, 'w') as file_:
             file_.write(service_file)
     except PermissionError as err:
         print(err)
@@ -35,13 +35,12 @@ def init_server():
     if not path:
         return
     update_config({
-        'server': {
             'host': '0.0.0.0',
             'port': port,
             'password': password,
             'path': path,
-        }
-    })
+            'synchronize': False,
+    }, server_=True, rewrite=True)
     if create_service_file():
         auto_start('enable')
         server('restart')
@@ -54,15 +53,15 @@ def clear(delete_ob):
 
 
 def server(command: str):
-    if isfile(SERVICE_FILE):
+    if isfile(SERVICE_FILE_FWR_SERVER):
         try:
-            check_call(['systemctl', command, SERVICE_FILE_NAME])
+            check_call(['systemctl', command, SERVICE_FILE_FWR_SERVER_NAME])
         except PermissionError as err:
             print(err)
         return
     if command == 'stop':
         return
-    if not read_config().get('server'):
+    if not read_config(server=True):
         print("Enter 'fwr server init' for creating config'")
         return
     if create_service_file():
@@ -70,16 +69,16 @@ def server(command: str):
 
 
 def auto_start(argument: str):
-    if isfile(SERVICE_FILE):
-        check_call(['systemctl', argument, SERVICE_FILE_NAME])
+    if isfile(SERVICE_FILE_FWR_SERVER):
+        check_call(['systemctl', argument, SERVICE_FILE_FWR_SERVER_NAME])
 
 
 def show_config():
-    config = read_config()
-    server_config = config.get('server')
+    config = read_config(server=True)
 
-    if server_config:
-        print("Server address: {}:{}".format(server_config['host'], server_config['port']))
+    if config:
+        print("Server address: {}:{}".format(config['host'], config['port']))
+        print("Server path:", config['path'])
     else:
         print("Server config doesn't exist")
 

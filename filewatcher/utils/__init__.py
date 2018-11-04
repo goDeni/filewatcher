@@ -17,8 +17,10 @@ from filewatcher.utils.utils import (
 from filewatcher.utils.utils_config import (
     DEFAULT_PORT,
     SERVER_CONFIG,
-    SERVICE_FILE,
-    SERVICE_FILE_NAME,
+    SERVICE_FILE_FWR_SERVER,
+    SERVICE_FILE_FWR_SERVER_NAME,
+    SERVICE_FILE_FWR_SYNC,
+    SERVICE_FILE_FWR_SYNC_NAME,
     read_config,
     update_config,
 )

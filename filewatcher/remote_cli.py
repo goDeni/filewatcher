@@ -1,4 +1,8 @@
 import os
+from os.path import isfile
+from subprocess import check_call
+
+from jinja2 import Environment, PackageLoader
 
 from filewatcher.client_class import ClientCommand
 from filewatcher.utils import (
@@ -10,7 +14,36 @@ from filewatcher.utils import (
     enter_ip,
     TableRender,
     format_time,
+    enter_path,
+    SERVICE_FILE_FWR_SYNC_NAME,
+    SERVICE_FILE_FWR_SYNC
 )
+
+
+def create_service_file_synchronizer() -> bool:
+    if isfile(SERVICE_FILE_FWR_SYNC):
+        return True
+
+    environment = Environment(loader=PackageLoader('filewatcher', 'templates'))
+    service_file = environment.get_template(SERVICE_FILE_FWR_SYNC_NAME).render()
+    try:
+        with open(SERVICE_FILE_FWR_SYNC, 'w') as file_:
+            file_.write(service_file)
+    except PermissionError as err:
+        print(err)
+        return False
+    return True
+
+
+def client_command(func):
+    def wrrapper(*args, **kwargs):
+        config = read_config(remote=True)
+        if not config:
+            print("Remote server config doesn't exist")
+            return
+        server = ClientCommand(config['host'], config['port'], config['password'])
+        return func(server, *args, **kwargs)
+    return wrrapper
 
 
 def init_remote():
@@ -24,18 +57,24 @@ def init_remote():
             'port': port,
             'host': host,
             'password': '',
-    }, remote_=True)
+            'synchronize': False,
+            'synchronize-path': '',
+    }, remote_=True, rewrite=True)
 
 
 def show_config():
-    remote_config = read_config().get('remote')
-
+    remote_config = read_config(remote=True)
+    # print(remote_config)
     if remote_config:
-        print("Remote server address: {}:{}".format(remote_config['host'], remote_config['port']))
+        print("Remote server address: {}:{}".format(remote_config.get('host'), remote_config.get('port')))
+        print("Synchronize:", 'Enabled' if remote_config.get('synchronize') else 'Disabled')
+        if remote_config.get('synchronize'):
+            print("Synchronize path:", remote_config.get('synchronize-path'))
     else:
         print("Remote server config doesnt exist")
 
 
+@client_command
 def show_folder(server: ClientCommand, folders_to_show: list):
     if not folders_to_show:
         folders_to_show.append('.')
@@ -70,6 +109,7 @@ def show_folder(server: ClientCommand, folders_to_show: list):
         print(table.render() if num else "Empty", '\n')
 
 
+@client_command
 def login(server: ClientCommand):
     hash_ = server.login()
     if not hash_:
@@ -80,6 +120,7 @@ def login(server: ClientCommand):
         print("You are successfully authorized!")
 
 
+@client_command
 def download(server: ClientCommand, args: list):
     path_from = args[:-1] if len(args) > 1 else [args[-1]]
     path_to = args[-1] if len(args) > 1 else os.path.abspath('')
@@ -97,6 +138,7 @@ def download(server: ClientCommand, args: list):
             print("Successful download", path, '\n')
 
 
+@client_command
 def upload(server: ClientCommand, args: list):
     what_path = args[:-1] if len(args) > 1 else [args[-1]]
     path_to = args[-1] if len(args) > 1 else '.'
@@ -113,22 +155,37 @@ def upload(server: ClientCommand, args: list):
             print("{} uploaded".format(path))
 
 
+@client_command
+def synchronize(unused, status: str):
+    if not create_service_file_synchronizer():
+        return
+
+    path_to_watch = ''
+    status = status == 'enable'
+
+    if status:
+        path_to_watch = enter_path('Enter absolute path to watching: ')
+
+    update_config({'synchronize': status, 'synchronize-path': path_to_watch})
+
+    check_call(['systemctl', 'enable' if status else 'disable', SERVICE_FILE_FWR_SYNC_NAME])
+    check_call(['systemctl', 'start' if status else 'stop', SERVICE_FILE_FWR_SYNC_NAME])
+
+    print("Synchronize successfully", 'enabled' if status else 'disabled')
+
+
 def remote_command(args):
     if args.init:
         init_remote()
-    if True in [args.connect, args.show_folder is not None, args.download is not None, args.upload is not None, args.login]:
-        config = read_config().get('remote')
-        if not config:
-            print("Remote server config doesn't exist")
-            return
-        server = ClientCommand(config['host'], config['port'], config['password'])
-        if args.show_folder is not None:
-            show_folder(server, args.show_folder)
-        elif args.download:
-            download(server, args.download)
-        elif args.upload:
-            upload(server, args.upload)
-        elif args.login:
-            login(server)
+    elif args.show_folder is not None:
+        show_folder(args.show_folder)
+    elif args.download:
+        download(args.download)
+    elif args.upload:
+        upload(args.upload)
+    elif args.login:
+        login()
+    elif args.synchronize:
+        synchronize(args.synchronize)
     else:
         show_config()

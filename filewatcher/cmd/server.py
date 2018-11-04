@@ -1,14 +1,12 @@
-from json import loads
 from logging import getLogger
 
 from filewatcher import backend
 from filewatcher.server_class import ServerFwr
-from filewatcher.utils import SERVER_CONFIG
+from filewatcher.utils import read_config
 
 log = getLogger(__name__)
 
-with open(SERVER_CONFIG, 'r') as file_:
-    CONFIGURATION = loads(file_.read()).get('server')
+CONFIGURATION = read_config(server=True)
 
 
 def main():

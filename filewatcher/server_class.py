@@ -12,6 +12,8 @@ from filewatcher.utils import (
     send_file,
     download_file,
     download_folder,
+    read_config,
+    update_config,
 )
 from filewatcher.utils.socket_utils import SIZE_POCKET
 
@@ -42,6 +44,7 @@ class ServerFwr:
 
     def get_command(self):
         data = self.connection.recv(SIZE_POCKET).decode('utf-8')
+        log.warning("data: %s", data)
         data = loads(data)
         hash_ = data['hash']
         if hash_ == self.password or data['command'] == Commands.LOGIN.name:
@@ -59,6 +62,7 @@ class ServerFwr:
             return dumps({
                 'err': 'Invalid password'
             }).encode('utf-8')
+        log.warning("%s %s", command, args)
         res = None
         error = None
         if command == Commands.SHOW_FOLDER.name:

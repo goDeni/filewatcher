@@ -74,7 +74,6 @@ class ClientCommand:
         response = None
 
         res = self.socket.recv(SIZE_POCKET).decode('utf-8')
-        print(res)
         res = loads(res)
 
         if res.get('isfile'):
@@ -93,8 +92,6 @@ class ClientCommand:
 
     @reopen_client
     def upload(self, path_source, path_dist) -> dict:
-        print("from: ", path_source)
-        print("to: ", path_dist)
         res = None
         if os.path.isfile(path_source):
             res = send_file(self.socket, path_source, path_source, path_dist, this_command=True, kwargs={

@@ -28,22 +28,27 @@ def parse_args():
     parser_server.add_argument("--auto-start",
                                choices=['enable', 'disable'],
                                nargs='?')
+    parser_server.add_argument('--show-config',
+                               action='store_true')
 
     parser_remote = subparsers.add_parser('remote',
                                           description="Work with remote server",
                                           help="Work with remote server")
     parser_remote.add_argument('--init',
                                action='store_true')
-    parser_remote.add_argument('--connect',
+    parser_remote.add_argument('--login',
                                action='store_true')
     parser_remote.add_argument('--show-folder',
                                nargs='*')
+    parser_remote.add_argument('--show-config',
+                               action='store_true')
     parser_remote.add_argument('--download',
                                nargs='+')
     parser_remote.add_argument('--upload',
                                nargs='+')
-    parser_remote.add_argument('--login',
-                               action='store_true')
+    parser_remote.add_argument('--synchronize',
+                               choices=['enable', 'disable'],
+                               nargs='?')
     args = sys.argv[1:]
     if args and args[0] != 'server':
         args = ['remote'] + args
@@ -51,7 +56,6 @@ def parse_args():
 
 
 def execute_command(command: str, args):
-    print(args)
     if command == 'server':
         server_command(args)
     elif command == 'remote':
