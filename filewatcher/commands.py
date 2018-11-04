@@ -7,3 +7,4 @@ class Commands(Enum):
     DOWNLOAD = 3
     UPLOAD = 4
     SYNCHRONIZE = 5
+    DELETE = 6

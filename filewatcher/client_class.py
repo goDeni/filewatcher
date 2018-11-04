@@ -110,6 +110,12 @@ class ClientCommand:
         res = loads(res)
         return res
 
+    @reopen_client
+    def delete(self, delete_obj: str) -> dict:
+        res = self.send_command(Commands.DELETE.name, delete_obj)
+        print(res)
+        return res
+
     def login(self):
         password = getpass("Enter password: ")
         return self.send_command(Commands.LOGIN.name, password, timeout=60)['response']

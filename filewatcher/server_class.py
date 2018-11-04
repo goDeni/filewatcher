@@ -1,5 +1,7 @@
 import os
 import socket as socket_
+import shutil
+
 from json import dumps, loads
 
 from logging import getLogger
@@ -73,6 +75,8 @@ class ServerFwr:
             res, error = self.download(args)
         elif command == Commands.UPLOAD.name:
             res, error = self.upload(args)
+        elif command == Commands.DELETE.name:
+            res, error = self.delete(args)
         if res is None and error is None:
             return
         return dumps({
@@ -141,3 +145,17 @@ class ServerFwr:
             download_folder(self.connection, os.path.join(self.directory, path, foldername), count_files)
             return 1, None
         return None, "Invalid path info {}".format(path_info)
+
+    def delete(self, delete_dir: str):
+        if not delete_dir or delete_dir.startswith('/'):
+            return 0, "Invalid path"
+
+        delete_dir = os.path.join(self.directory, delete_dir)
+        log.warning("Delete %s", delete_dir)
+        if os.path.isfile(delete_dir):
+            os.remove(delete_dir)
+        elif os.path.isdir(delete_dir):
+            shutil.rmtree(delete_dir)
+        else:
+            return 0, "Invalid path"
+        return 1, None

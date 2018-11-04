@@ -174,6 +174,18 @@ def synchronize(unused, status: str):
     print("Synchronize successfully", 'enabled' if status else 'disabled')
 
 
+@client_command
+def delete(server: ClientCommand, delete_objects: list):
+    for delete_obj in delete_objects:
+        res = server.delete(delete_obj)
+        res, err = res.get('response'), res.get('err')
+        if err:
+            print("Error:", err)
+            continue
+        if res:
+            print(delete_obj, "Deleted")
+
+
 def remote_command(args):
     if args.init:
         init_remote()
@@ -187,5 +199,7 @@ def remote_command(args):
         login()
     elif args.synchronize:
         synchronize(args.synchronize)
+    elif args.delete:
+        delete(args.delete)
     else:
         show_config()

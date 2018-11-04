@@ -40,6 +40,8 @@ def parse_args():
                                action='store_true')
     parser_remote.add_argument('--show-folder',
                                nargs='*')
+    parser_remote.add_argument('--delete',
+                               nargs='+')
     parser_remote.add_argument('--show-config',
                                action='store_true')
     parser_remote.add_argument('--download',
@@ -49,6 +51,7 @@ def parse_args():
     parser_remote.add_argument('--synchronize',
                                choices=['enable', 'disable'],
                                nargs='?')
+
     args = sys.argv[1:]
     if args and args[0] != 'server':
         args = ['remote'] + args
