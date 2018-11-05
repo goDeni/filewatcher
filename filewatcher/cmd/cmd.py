@@ -55,7 +55,7 @@ def parse_args():
                                action='store_true')
 
     args = sys.argv[1:]
-    if args and args[0] != 'server':
+    if args and args[0] != 'server' and args[0] not in ['--help', '-h']:
         args = ['remote'] + args
     return parser.parse_args(args)
 
