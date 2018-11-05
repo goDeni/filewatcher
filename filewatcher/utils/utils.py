@@ -1,6 +1,8 @@
+import _thread
 import datetime
 import ipaddress
 import os
+import time
 from crypt import crypt
 from hmac import compare_digest
 from os.path import isdir
@@ -181,7 +183,21 @@ def get_count_files(dir: str):
     return sum([len(a[2]) for a in os.walk(os.path.join(dir))])
 
 
-def get_files(dir: str):
-    for path, dirs, files in os.walk(dir):
+def get_files(directory: str, is_root: bool=False):
+    n = len(directory) + 1 if is_root else 0
+    for path, dirs, files in os.walk(directory):
         for file in files:
-            yield os.path.join(path, file)
+            yield os.path.join(path, file)[n:]
+
+
+def run_forever(repeat_delay: int):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            def wrap():
+                while True:
+                    func(*args, **kwargs)
+                    time.sleep(repeat_delay)
+            print("Created th")
+            _thread.start_new_thread(wrap, ())
+        return wrapper
+    return decorator

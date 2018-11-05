@@ -14,8 +14,9 @@ from filewatcher.utils import (
     send_file,
     download_file,
     download_folder,
+    get_files,
+    read_data,
 )
-from filewatcher.utils.socket_utils import SIZE_POCKET
 
 log = getLogger(__name__)
 
@@ -33,7 +34,7 @@ class ServerFwr:
         self.directory = directory
 
     def listen(self):
-        log.info("Start listening on {}:{}".format(self.host, self.port))
+        log.warning("Start listening on {}:{}".format(self.host, self.port))
         while True:
             self.connection, add = self.socket.accept()
             self.connection.settimeout(10)
@@ -44,8 +45,8 @@ class ServerFwr:
             self.connection.close()
 
     def get_command(self):
-        data = self.connection.recv(SIZE_POCKET).decode('utf-8')
-        log.warning("data: %s", data)
+        data = read_data(self.connection)
+        log.debug("data: %s", data)
         data = loads(data)
         hash_ = data['hash']
         if hash_ == self.password or data['command'] == Commands.LOGIN.name:
@@ -63,7 +64,7 @@ class ServerFwr:
             return dumps({
                 'err': 'Invalid password'
             }).encode('utf-8')
-        log.warning("%s %s", command, args)
+        log.debug("%s %s", command, args)
         res = None
         error = None
         if command == Commands.SHOW_FOLDER.name:
@@ -76,6 +77,8 @@ class ServerFwr:
             res, error = self.upload(args)
         elif command == Commands.DELETE.name:
             res, error = self.delete(args)
+        elif command == Commands.CHECK_THREE.name:
+            res, error = self.check_three(args)
         if res is None and error is None:
             return
         return dumps({
@@ -133,7 +136,7 @@ class ServerFwr:
         if path_info.get('isfile'):
             size, path, filename = path_info.get('size'), path_info.get('path'), path_info.get('filename')
             if not os.path.isdir(os.path.join(self.directory, path)):
-                return None, "Invalid path"
+                return None, "Invalid path {}".format(path)
             download_file(self.connection, size, os.path.join(self.directory, path, filename))
             return 1, None
         elif path_info.get('isfolder'):
@@ -150,7 +153,6 @@ class ServerFwr:
             return 0, "Invalid path"
 
         delete_dir = os.path.join(self.directory, delete_dir)
-        log.warning("Delete %s", delete_dir)
         if os.path.isfile(delete_dir):
             os.remove(delete_dir)
         elif os.path.isdir(delete_dir):
@@ -158,3 +160,15 @@ class ServerFwr:
         else:
             return 0, "Invalid path"
         return 1, None
+
+    def check_three(self, three: list):
+        this_three = list(get_files(self.directory, True))
+
+        delete_dirs = [d for d in this_three if d not in three]
+        need_dirs = [d for d in three if d not in this_three]
+
+        for directory in delete_dirs:
+            directory = os.path.join(self.directory, directory)
+            if os.path.isfile(directory):
+                os.remove(directory)
+        return need_dirs, None

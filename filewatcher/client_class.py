@@ -2,6 +2,7 @@ import os
 import socket as socket_
 from json import loads, dumps
 from getpass import getpass
+from logging import getLogger
 
 from filewatcher.commands import Commands
 from filewatcher.utils.socket_utils import (
@@ -10,7 +11,11 @@ from filewatcher.utils.socket_utils import (
     SIZE_POCKET,
     send_file,
     send_folder,
+    get_files,
+    read_data,
 )
+
+log = getLogger(__name__)
 
 
 def reopen_client(fun):
@@ -56,10 +61,10 @@ class ClientCommand:
             'hash': self.password,
         }).encode('utf-8'))
         if wait_res:
-            response = self.socket.recv(SIZE_POCKET)
+            response = read_data(self.socket)
             if close_conn:
                 self.close()
-            return loads(response.decode('utf-8'))
+            return loads(response)
         if close_conn:
             self.close()
 
@@ -103,6 +108,9 @@ class ClientCommand:
                 'command': Commands.UPLOAD.name,
                 'hash': self.password,
             })
+        else:
+            log.warning("Path %s not found", path_source)
+            return {'response': 0, 'err': "Path {} not found".format(path_source)}
         if isinstance(res, dict):
             return res
 
@@ -117,3 +125,8 @@ class ClientCommand:
     def login(self):
         password = getpass("Enter password: ")
         return self.send_command(Commands.LOGIN.name, password, timeout=60)['response']
+
+    @reopen_client
+    def check_tree(self, path: str):
+        three = list(get_files(path, True))
+        return self.send_command(Commands.CHECK_THREE.name, three)

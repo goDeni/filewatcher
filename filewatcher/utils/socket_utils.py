@@ -13,6 +13,13 @@ TIMEOUT = 10
 log = getLogger(__name__)
 
 
+def read_data(socket: socket_.socket) -> str:
+    data = socket.recv(SIZE_POCKET)
+    while data.startswith(b'{') and not data.endswith(b'}'):
+        data += socket.recv(SIZE_POCKET)
+    return data.decode('utf-8')
+
+
 def send_file(socket: socket_.socket, download_path: str, filename: str, path='', this_command=False, kwargs=None):
     file_info = {
         'filename': filename,
@@ -97,7 +104,7 @@ def download_folder(socket: socket_.socket, download_path: str, count_files: int
         size, path, filename = file_info.get('size'), file_info.get('path'), file_info.get('filename')
         if None in [size, path, filename]:
             print("Download error", file_info)
-            log.error("Download error %s", file_info)
+            log.warning("Download error %s", file_info)
         else:
             path_tmp = os.path.join(download_path, path)
             if not os.path.isdir(path_tmp):
