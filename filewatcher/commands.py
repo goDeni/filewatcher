@@ -6,5 +6,6 @@ class Commands(Enum):
     LOGIN = 2
     DOWNLOAD = 3
     UPLOAD = 4
-    SYNCHRONIZE = 5
+    # SYNCHRONIZE = 5
+    CHECK_THREE = 5
     DELETE = 6

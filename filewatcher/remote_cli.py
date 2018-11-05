@@ -170,7 +170,7 @@ def synchronize(status: str):
     update_config({'synchronize': status, 'synchronize-path': path_to_watch}, remote_=True)
 
     check_call(['systemctl', 'enable' if status else 'disable', SERVICE_FILE_FWR_SYNC_NAME])
-    check_call(['systemctl', 'start' if status else 'stop', SERVICE_FILE_FWR_SYNC_NAME])
+    check_call(['systemctl', 'restart' if status else 'stop', SERVICE_FILE_FWR_SYNC_NAME])
 
     print("Synchronize successfully", 'enabled' if status else 'disabled')
 
