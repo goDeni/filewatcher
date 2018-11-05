@@ -17,42 +17,57 @@ def parse_args():
                                            help="Work with server")
 
     parser_server.add_argument("--init",
-                               action="store_true")
+                               action="store_true",
+                               help="Initialization server")
     parser_server.add_argument("--clear",
                                choices=['server', 'remote'],
-                               nargs='?')
+                               nargs='?',
+                               help="Clear server/remote config")
     parser_server.add_argument("--start",
-                               action="store_true")
+                               action="store_true",
+                               help="Start server")
     parser_server.add_argument("--stop",
-                               action="store_true")
+                               action="store_true",
+                               help="Stop server")
     parser_server.add_argument("--auto-start",
                                choices=['enable', 'disable'],
-                               nargs='?')
+                               nargs='?',
+                               help="Enable or disable auto-start server")
     parser_server.add_argument('--show-config',
-                               action='store_true')
+                               action='store_true',
+                               help="Show server configuration")
 
     parser_remote = subparsers.add_parser('remote',
                                           description="Work with remote server",
-                                          help="Work with remote server")
+                                          help="Work with client")
     parser_remote.add_argument('--init',
-                               action='store_true')
+                               action='store_true',
+                               help="Initialization server for remote access")
     parser_remote.add_argument('--login',
-                               action='store_true')
+                               action='store_true',
+                               help="Authorization on server")
     parser_remote.add_argument('--show-folder',
-                               nargs='*')
+                               nargs='*',
+                               help="Show files and folders in remote folder")
     parser_remote.add_argument('--delete',
-                               nargs='+')
+                               nargs='+',
+                               help="Delete files/folders in remote folder")
     parser_remote.add_argument('--show-config',
-                               action='store_true')
+                               action='store_true',
+                               help="Show client configuration")
     parser_remote.add_argument('--download',
-                               nargs='+')
+                               nargs='+',
+                               help="Download folders/files from server")
     parser_remote.add_argument('--upload',
-                               nargs='+')
+                               nargs='+',
+                               help="Upload folders/files on server")
     parser_remote.add_argument('--synchronize',
                                choices=['enable', 'disable'],
-                               nargs='?')
+                               nargs='?',
+                               help="Enable or disable synchronization local folder with folder on the server")
     parser_remote.add_argument('--synchronize-all',
-                               action='store_true')
+                               action='store_true',
+                               help="Restart synchronize")
 
     args = sys.argv[1:]
     if args and args[0] != 'server' and args[0] not in ['--help', '-h']:
