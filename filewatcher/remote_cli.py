@@ -188,6 +188,12 @@ def delete(server: ClientCommand, delete_objects: list):
 
 
 def synchronize_all():
+    config = read_config(remote=True)
+    if not config:
+        return
+    if not config['synchronize']:
+        print("Synchronize not configured")
+        return
     print("Synchronizing...")
     check_call(['systemctl', 'restart', SERVICE_FILE_FWR_SYNC_NAME])
 

@@ -5,7 +5,7 @@
 sudo python3 setup.py install
 ```
 >Для просмотра всех команд нужно выполнить команду
-    ```bash
+    ```
     fwr --help
     ```
 
