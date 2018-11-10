@@ -65,6 +65,7 @@ class ServerFwr:
                 'err': 'Invalid password'
             }).encode('utf-8')
         log.debug("%s %s", command, args)
+
         res = None
         error = None
         if command == Commands.SHOW_FOLDER.name:
@@ -79,6 +80,9 @@ class ServerFwr:
             res, error = self.delete(args)
         elif command == Commands.CHECK_THREE.name:
             res, error = self.check_three(args)
+        elif command == Commands.RENAME.name:
+            res, error = self.rename(args)
+
         if res is None and error is None:
             return
         return dumps({
@@ -172,3 +176,14 @@ class ServerFwr:
             if os.path.isfile(directory):
                 os.remove(directory)
         return need_dirs, None
+
+    def rename(self, rename_d: list):
+        old_name, new_name = rename_d
+
+        if not os.path.exists(os.path.join(self.directory, old_name)):
+            return 0, "{} not exist".format(old_name)
+        if os.path.exists(os.path.join(self.directory, new_name)):
+            return 0, "{} name already exist".format(new_name)
+
+        os.renames(os.path.join(self.directory, old_name), os.path.join(self.directory, new_name))
+        return 1, None

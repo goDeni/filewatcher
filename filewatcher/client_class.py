@@ -130,3 +130,6 @@ class ClientCommand:
     def check_tree(self, path: str):
         three = list(get_files(path, is_root=True, get_size=True))
         return self.send_command(Commands.CHECK_THREE.name, three)
+
+    def rename(self, rename_d: list) -> dict:
+        return self.send_command(Commands.RENAME.name, rename_d)

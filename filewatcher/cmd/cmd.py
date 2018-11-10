@@ -52,6 +52,9 @@ def parse_args():
     parser_remote.add_argument('-del', '--delete',
                                nargs='+',
                                help="Delete files/folders in remote folder")
+    parser_remote.add_argument('-rn', '--rename',
+                               nargs=2,
+                               help="Rename folder/file in remote folder")
     parser_remote.add_argument('-shc', '--show-config',
                                action='store_true',
                                help="Show client configuration")

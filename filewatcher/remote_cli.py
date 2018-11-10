@@ -198,6 +198,16 @@ def synchronize_all():
     check_call(['systemctl', 'restart', SERVICE_FILE_FWR_SYNC_NAME])
 
 
+@client_command
+def rename(server: ClientCommand, rename_d: list):
+    res = server.rename(rename_d)
+    res, err = res.get('response'), res.get('err')
+    if err:
+        print(err)
+    if res:
+        print('Successfully renamed', ' -> '.join(rename_d))
+
+
 def remote_command(args):
     if args.init:
         init_remote()
@@ -215,5 +225,7 @@ def remote_command(args):
         synchronize_all()
     elif args.delete:
         delete(args.delete)
+    elif args.rename:
+        rename(args.rename)
     else:
         show_config()
