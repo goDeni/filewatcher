@@ -83,6 +83,8 @@ class ServerFwr:
             res, error = self.check_three(args)
         elif command == Commands.RENAME.name:
             res, error = self.rename(args)
+        elif command == Commands.MOVE.name:
+            res, error = self.move(args)
 
         if res is None and error is None:
             return
@@ -196,4 +198,28 @@ class ServerFwr:
             return 0, "{} name already exist".format(new_name)
 
         os.renames(os.path.join(self.directory, old_name), os.path.join(self.directory, new_name))
+        return 1, None
+
+    def move(self, move_d: list):
+        object_move, move_destination = move_d
+
+        obj_move = os.path.join(self.directory, object_move)
+        dst_move = os.path.join(self.directory, move_destination)
+
+        if not os.path.exists(obj_move):
+            return 0, "Invalid source path"
+
+        if dst_move.endswith('/'):
+            if not os.path.exists(dst_move):
+                os.makedirs(dst_move)
+            elif os.path.split(object_move)[1] in os.listdir(dst_move):
+                return 0, "{} already exist".format(os.path.join(move_destination, os.path.split(object_move)[1]))
+        else:
+            path, name = os.path.split(dst_move)
+            if not os.path.exists(path):
+                os.makedirs(path)
+            elif name in os.listdir(path):
+                return 0, "{} already exist".format(move_destination)
+
+        shutil.move(obj_move, dst_move)
         return 1, None

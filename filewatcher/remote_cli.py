@@ -176,7 +176,7 @@ def synchronize(status: str):
 
 
 @client_command
-def delete(server: ClientCommand, delete_objects: list):
+def remove(server: ClientCommand, delete_objects: list):
     for delete_obj in delete_objects:
         res = server.delete(delete_obj)
         res, err = res.get('response'), res.get('err')
@@ -211,6 +211,11 @@ def rename(server: ClientCommand, rename_d: list):
 @client_command
 def move(server: ClientCommand, move_d: list):
     res = server.move(move_d)
+    res, err = res.get('response'), res.get('err')
+    if err:
+        print(err)
+    if res:
+        print('Successfully moved', ' -> '.join(move_d))
 
 
 def remote_command(args):
@@ -228,8 +233,8 @@ def remote_command(args):
         synchronize(args.synchronize)
     elif args.synchronize_all:
         synchronize_all()
-    elif args.delete:
-        delete(args.delete)
+    elif args.remove:
+        remove(args.remove)
     elif args.rename:
         rename(args.rename)
     elif args.move:

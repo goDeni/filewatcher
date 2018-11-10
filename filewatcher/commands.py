@@ -9,3 +9,4 @@ class Commands(Enum):
     CHECK_THREE = 5
     DELETE = 6
     RENAME = 7
+    MOVE = 8

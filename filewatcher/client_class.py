@@ -136,5 +136,5 @@ class ClientCommand:
     def rename(self, rename_d: list) -> dict:
         return self.send_command(Commands.RENAME.name, rename_d)
 
-    def move(self, move_d: list):
-        pass
+    def move(self, move_d: list) -> dict:
+        return self.send_command(Commands.MOVE.name, move_d)

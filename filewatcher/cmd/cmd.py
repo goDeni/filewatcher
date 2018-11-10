@@ -49,7 +49,7 @@ def parse_args():
     parser_remote.add_argument('-shf', '--show-folder',
                                nargs='*',
                                help="Show files and folders in remote folder")
-    parser_remote.add_argument('-del', '--delete',
+    parser_remote.add_argument('-rm', '--remove',
                                nargs='+',
                                help="Delete files/folders in remote folder")
     parser_remote.add_argument('-rn', '--rename',
