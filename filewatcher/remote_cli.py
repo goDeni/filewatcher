@@ -208,6 +208,11 @@ def rename(server: ClientCommand, rename_d: list):
         print('Successfully renamed', ' -> '.join(rename_d))
 
 
+@client_command
+def move(server: ClientCommand, move_d: list):
+    res = server.move(move_d)
+
+
 def remote_command(args):
     if args.init:
         init_remote()
@@ -227,5 +232,7 @@ def remote_command(args):
         delete(args.delete)
     elif args.rename:
         rename(args.rename)
+    elif args.move:
+        move(args.move)
     else:
         show_config()

@@ -13,6 +13,7 @@ from filewatcher.utils.utils import (
     get_folder_size,
     get_count_files,
     get_files,
+    get_folders,
     run_forever,
 )
 from filewatcher.utils.utils_config import (

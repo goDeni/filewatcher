@@ -5,13 +5,14 @@ from getpass import getpass
 from logging import getLogger
 
 from filewatcher.commands import Commands
-from filewatcher.utils.socket_utils import (
+from filewatcher.utils import (
     download_file,
     download_folder,
     SIZE_POCKET,
     send_file,
     send_folder,
     get_files,
+    get_folders,
     read_data,
 )
 
@@ -128,8 +129,12 @@ class ClientCommand:
 
     @reopen_client
     def check_tree(self, path: str):
-        three = list(get_files(path, is_root=True, get_size=True))
-        return self.send_command(Commands.CHECK_THREE.name, three)
+        three_files = list(get_files(path, is_root=True, get_size=True))
+        three_folders = list(get_folders(path, is_root=True))
+        return self.send_command(Commands.CHECK_THREE.name, {'files': three_files, 'folders': three_folders})
 
     def rename(self, rename_d: list) -> dict:
         return self.send_command(Commands.RENAME.name, rename_d)
+
+    def move(self, move_d: list):
+        pass

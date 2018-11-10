@@ -188,8 +188,19 @@ def get_files(directory: str, is_root: bool=False, get_size: bool=False):
     for path, dirs, files in os.walk(directory):
         for file in files:
             if get_size:
-                yield os.path.join(path, file)[n:], round(os.path.getsize(os.path.join(path, file)))
-            yield os.path.join(path, file)[n:]
+                yield [os.path.join(path, file)[n:], round(os.path.getsize(os.path.join(path, file)))]
+            else:
+                yield os.path.join(path, file)[n:]
+
+
+def get_folders(directory: str, is_root: bool=False, get_size: bool=False):
+    n = len(directory) + 1 if is_root else 0
+    for path, dirs, files in os.walk(directory):
+        for d in dirs:
+            if get_size:
+                yield os.path.join(path, d)[n:], round(os.path.getsize(os.path.join(path, d)))
+            else:
+                yield os.path.join(path, d)[n:]
 
 
 def run_forever(repeat_delay: int):
@@ -199,7 +210,7 @@ def run_forever(repeat_delay: int):
                 while True:
                     func(*args, **kwargs)
                     time.sleep(repeat_delay)
-            print("Created th")
+            print("Created thread function '{}' with repeat_delay={}".format(func.__name__, repeat_delay))
             _thread.start_new_thread(wrap, ())
         return wrapper
     return decorator

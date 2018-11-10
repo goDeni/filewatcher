@@ -15,6 +15,7 @@ from filewatcher.utils import (
     download_file,
     download_folder,
     get_files,
+    get_folders,
     read_data,
 )
 
@@ -165,17 +166,26 @@ class ServerFwr:
             return 0, "Invalid path"
         return 1, None
 
-    def check_three(self, three: list):
-        this_three = list(get_files(self.directory, is_root=True, get_size=True))
+    def check_three(self, three: dict):
+        files_three = three.get('files')
+        folders_three = three.get('folders')
 
-        delete_dirs = [d[0] for d in this_three if d not in three]
-        need_dirs = [d[0] for d in three if d not in this_three]
+        this_folders_three = list(get_folders(self.directory, is_root=True))
+        for folder in this_folders_three:
+            if folder not in folders_three:
+                shutil.rmtree(os.path.join(self.directory, folder))
 
-        for directory in delete_dirs:
+        for folder in folders_three:
+            if folder not in this_folders_three:
+                os.makedirs(os.path.join(self.directory, folder))
+
+        this_files_three = list(get_files(self.directory, is_root=True, get_size=True))
+        for directory in [d[0] for d in this_files_three if d not in files_three]:
             directory = os.path.join(self.directory, directory)
             if os.path.isfile(directory):
                 os.remove(directory)
-        return need_dirs, None
+
+        return [d[0] for d in files_three if d not in this_files_three], None
 
     def rename(self, rename_d: list):
         old_name, new_name = rename_d

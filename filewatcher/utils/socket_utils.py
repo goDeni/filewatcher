@@ -35,6 +35,7 @@ def send_file(socket: socket_.socket, download_path: str, filename: str, path=''
     if not res:
         return "Success flag didn't receive"
     elif len(res) > 1:
+        log.debug(res)
         return loads(res)
 
     with open(download_path, 'rb') as file_:
