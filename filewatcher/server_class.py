@@ -162,10 +162,10 @@ class ServerFwr:
         return 1, None
 
     def check_three(self, three: list):
-        this_three = list(get_files(self.directory, True))
+        this_three = list(get_files(self.directory, is_root=True, get_size=True))
 
-        delete_dirs = [d for d in this_three if d not in three]
-        need_dirs = [d for d in three if d not in this_three]
+        delete_dirs = [d[0] for d in this_three if d not in three]
+        need_dirs = [d[0] for d in three if d not in this_three]
 
         for directory in delete_dirs:
             directory = os.path.join(self.directory, directory)

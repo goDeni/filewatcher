@@ -183,10 +183,12 @@ def get_count_files(dir: str):
     return sum([len(a[2]) for a in os.walk(os.path.join(dir))])
 
 
-def get_files(directory: str, is_root: bool=False):
+def get_files(directory: str, is_root: bool=False, get_size: bool=False):
     n = len(directory) + 1 if is_root else 0
     for path, dirs, files in os.walk(directory):
         for file in files:
+            if get_size:
+                yield os.path.join(path, file)[n:], round(os.path.getsize(os.path.join(path, file)))
             yield os.path.join(path, file)[n:]
 
 

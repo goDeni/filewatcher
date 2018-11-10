@@ -128,5 +128,5 @@ class ClientCommand:
 
     @reopen_client
     def check_tree(self, path: str):
-        three = list(get_files(path, True))
+        three = list(get_files(path, is_root=True, get_size=True))
         return self.send_command(Commands.CHECK_THREE.name, three)
