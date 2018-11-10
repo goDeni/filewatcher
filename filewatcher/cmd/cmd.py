@@ -58,6 +58,9 @@ def parse_args():
     parser_remote.add_argument('-mv', '--move',
                                nargs=2,
                                help="Moving folder/file on remote folder")
+    parser_remote.add_argument('-cp', '--copy',
+                               nargs=2,
+                               help="Copy folder/file on remote folder")
     parser_remote.add_argument('-shc', '--show-config',
                                action='store_true',
                                help="Show client configuration")

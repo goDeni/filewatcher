@@ -138,3 +138,6 @@ class ClientCommand:
 
     def move(self, move_d: list) -> dict:
         return self.send_command(Commands.MOVE.name, move_d)
+
+    def copy(self, copy_d: list) -> dict:
+        return self.send_command(Commands.COPY.name, copy_d)

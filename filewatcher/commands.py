@@ -10,3 +10,4 @@ class Commands(Enum):
     DELETE = 6
     RENAME = 7
     MOVE = 8
+    COPY = 9

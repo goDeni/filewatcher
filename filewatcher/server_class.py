@@ -85,6 +85,8 @@ class ServerFwr:
             res, error = self.rename(args)
         elif command == Commands.MOVE.name:
             res, error = self.move(args)
+        elif command == Commands.COPY.name:
+            res, error = self.copy(args)
 
         if res is None and error is None:
             return
@@ -147,7 +149,8 @@ class ServerFwr:
             download_file(self.connection, size, os.path.join(self.directory, path, filename))
             return 1, None
         elif path_info.get('isfolder'):
-            foldername, path, count_files = path_info.get('foldername'), path_info.get('path'), path_info.get('count_files')
+            foldername, path, count_files = path_info.get('foldername'), path_info.get('path'), path_info.get(
+                'count_files')
             if path == '.':
                 path = ''
 
@@ -202,6 +205,8 @@ class ServerFwr:
 
     def move(self, move_d: list):
         object_move, move_destination = move_d
+        if object_move == '.':
+            return 0, "Invalid path"
 
         obj_move = os.path.join(self.directory, object_move)
         dst_move = os.path.join(self.directory, move_destination)
@@ -216,10 +221,42 @@ class ServerFwr:
                 return 0, "{} already exist".format(os.path.join(move_destination, os.path.split(object_move)[1]))
         else:
             path, name = os.path.split(dst_move)
+            if name == '.':
+                name = os.path.split(object_move)[1]
+
             if not os.path.exists(path):
                 os.makedirs(path)
             elif name in os.listdir(path):
-                return 0, "{} already exist".format(move_destination)
+                return 0, "{} already exist".format(os.path.join(os.path.split(move_destination)[0], name))
 
         shutil.move(obj_move, dst_move)
+        return 1, None
+
+    def copy(self, copy_d: list):
+        copy_dir, copy_dst = copy_d
+        if copy_dir == '.':
+            return 0, "Invalid path"
+
+        copy_directory = os.path.join(self.directory, copy_dir)
+        copy_destination = os.path.join(self.directory, copy_dst)
+
+        if not os.path.exists(copy_directory):
+            return 0, "{} doesn't exist".format(copy_dir)
+
+        if copy_destination.endswith('/'):
+            if not os.path.exists(copy_destination):
+                os.makedirs(copy_destination)
+            elif os.path.split(copy_dir)[1] in os.listdir(copy_destination):
+                return 0, "{} already exist".format(os.path.join(copy_dst, copy_dir))
+        else:
+            path, name = os.path.split(copy_destination)
+            if name == '.':
+                name = os.path.split(copy_dir)[1]
+
+            if not os.path.exists(path):
+                os.makedirs(path)
+            elif name in os.listdir(path):
+                return 0, "{} already exist".format(os.path.join(os.path.split(copy_dst)[0], name))
+
+        shutil.copy(copy_directory, copy_destination)
         return 1, None

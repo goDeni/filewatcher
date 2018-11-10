@@ -205,7 +205,7 @@ def rename(server: ClientCommand, rename_d: list):
     if err:
         print(err)
     if res:
-        print('Successfully renamed', ' -> '.join(rename_d))
+        print("Renamed successfully", ' -> '.join(rename_d))
 
 
 @client_command
@@ -215,7 +215,17 @@ def move(server: ClientCommand, move_d: list):
     if err:
         print(err)
     if res:
-        print('Successfully moved', ' -> '.join(move_d))
+        print("Moved successfully", ' -> '.join(move_d))
+
+
+@client_command
+def copy(server: ClientCommand, copy_d: list):
+    res = server.copy(copy_d)
+    res, err = res.get('response'), res.get('err')
+    if err:
+        print(err)
+    if res:
+        print("Сopied successfully", ' -> '.join(copy_d))
 
 
 def remote_command(args):
@@ -239,5 +249,7 @@ def remote_command(args):
         rename(args.rename)
     elif args.move:
         move(args.move)
+    elif args.copy:
+        copy(args.copy)
     else:
         show_config()
