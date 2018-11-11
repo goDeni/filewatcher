@@ -2,9 +2,8 @@ import os
 from os.path import isfile
 from subprocess import check_call
 
-from jinja2 import Environment, PackageLoader
-
 from filewatcher.client_class import ClientCommand
+from filewatcher.templates import FWR_SYNC_SERVICE
 from filewatcher.utils import (
     enter_positive_number,
     human_file_size,
@@ -16,7 +15,7 @@ from filewatcher.utils import (
     format_time,
     enter_path,
     SERVICE_FILE_FWR_SYNC_NAME,
-    SERVICE_FILE_FWR_SYNC
+    SERVICE_FILE_FWR_SYNC,
 )
 
 
@@ -24,29 +23,43 @@ def create_service_file_synchronizer() -> bool:
     if isfile(SERVICE_FILE_FWR_SYNC):
         return True
 
-    environment = Environment(loader=PackageLoader('filewatcher', 'templates'))
-    service_file = environment.get_template(SERVICE_FILE_FWR_SYNC_NAME).render()
     try:
         with open(SERVICE_FILE_FWR_SYNC, 'w') as file_:
-            file_.write(service_file)
+            file_.write(FWR_SYNC_SERVICE)
     except PermissionError as err:
         print(err)
         return False
     return True
 
 
-def client_command(func):
-    def wrrapper(*args, **kwargs):
-        config = read_config(remote=True)
-        if not config:
-            print("Remote server config doesn't exist")
-            return
-        server = ClientCommand(config['host'], config['port'], config['password'])
-        try:
-            return func(server, *args, **kwargs)
-        except KeyboardInterrupt:
-            server.close()
-    return wrrapper
+def client_command(put_config=False, server_connect=True, synchronize_block=True):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            server = None
+            config = read_config(remote=True)
+            if synchronize_block and server_connect and config.get('synchronize'):
+                print("Synchronize enabled. You can't do this operation")
+                return
+            if not config:
+                print("Remote server config doesn't exist")
+                return
+            if server_connect:
+                try:
+                    server = ClientCommand(config['host'], config['port'], config['password'])
+                    args = (server,) + args
+                except ConnectionRefusedError:
+                    print("Unable to connect to server")
+                    return
+            if put_config:
+                kwargs['config'] = config
+
+            try:
+                return func(*args, **kwargs)
+            except KeyboardInterrupt:
+                if server is not None:
+                    server.close()
+        return wrapper
+    return decorator
 
 
 def init_remote():
@@ -65,18 +78,37 @@ def init_remote():
     }, remote_=True, rewrite=True)
 
 
-def show_config():
-    remote_config = read_config(remote=True)
-    if remote_config:
-        print("Remote server address: {}:{}".format(remote_config.get('host'), remote_config.get('port')))
-        print("Synchronize:", 'Enabled' if remote_config.get('synchronize') else 'Disabled')
-        if remote_config.get('synchronize'):
-            print("Synchronize path:", remote_config.get('synchronize-path'))
+def synchronize(status: str):
+    if not create_service_file_synchronizer():
+        return
+
+    path_to_watch = ''
+    status = status == 'enable'
+
+    if status:
+        path_to_watch = enter_path('Enter absolute path to watching: ')
+
+    if not update_config({'synchronize': status, 'synchronize-path': path_to_watch}, remote_=True):
+        return
+
+    check_call(['systemctl', 'enable' if status else 'disable', SERVICE_FILE_FWR_SYNC_NAME])
+    check_call(['systemctl', 'restart' if status else 'stop', SERVICE_FILE_FWR_SYNC_NAME])
+
+    print("Synchronize successfully", 'enabled' if status else 'disabled')
+
+
+@client_command(put_config=True, server_connect=False)
+def show_config(config: dict):
+    if config:
+        print("Remote server address: {}:{}".format(config.get('host'), config.get('port')))
+        print("Synchronize:", 'Enabled' if config.get('synchronize') else 'Disabled')
+        if config.get('synchronize'):
+            print("Synchronize path:", config.get('synchronize-path'))
     else:
         print("Remote server config doesnt exist")
 
 
-@client_command
+@client_command(synchronize_block=False)
 def show_folder(server: ClientCommand, folders_to_show: list):
     if not folders_to_show:
         folders_to_show.append('.')
@@ -111,7 +143,7 @@ def show_folder(server: ClientCommand, folders_to_show: list):
         print(table.render() if num else "Empty", '\n')
 
 
-@client_command
+@client_command(synchronize_block=False)
 def login(server: ClientCommand):
     hash_ = server.login()
     if not hash_:
@@ -122,7 +154,7 @@ def login(server: ClientCommand):
         print("You are successfully authorized!")
 
 
-@client_command
+@client_command(synchronize_block=False)
 def download(server: ClientCommand, args: list):
     path_from = args[:-1] if len(args) > 1 else [args[-1]]
     path_to = args[-1] if len(args) > 1 else os.path.abspath('')
@@ -140,7 +172,7 @@ def download(server: ClientCommand, args: list):
             print("Successful download", path, '\n')
 
 
-@client_command
+@client_command()
 def upload(server: ClientCommand, args: list):
     what_path = args[:-1] if len(args) > 1 else [args[-1]]
     path_to = args[-1] if len(args) > 1 else '.'
@@ -157,26 +189,8 @@ def upload(server: ClientCommand, args: list):
             print("{} uploaded".format(path))
 
 
-def synchronize(status: str):
-    if not create_service_file_synchronizer():
-        return
-
-    path_to_watch = ''
-    status = status == 'enable'
-
-    if status:
-        path_to_watch = enter_path('Enter absolute path to watching: ')
-
-    update_config({'synchronize': status, 'synchronize-path': path_to_watch}, remote_=True)
-
-    check_call(['systemctl', 'enable' if status else 'disable', SERVICE_FILE_FWR_SYNC_NAME])
-    check_call(['systemctl', 'restart' if status else 'stop', SERVICE_FILE_FWR_SYNC_NAME])
-
-    print("Synchronize successfully", 'enabled' if status else 'disabled')
-
-
-@client_command
-def delete(server: ClientCommand, delete_objects: list):
+@client_command()
+def remove(server: ClientCommand, delete_objects: list):
     for delete_obj in delete_objects:
         res = server.delete(delete_obj)
         res, err = res.get('response'), res.get('err')
@@ -187,8 +201,8 @@ def delete(server: ClientCommand, delete_objects: list):
             print(delete_obj, "Deleted")
 
 
-def synchronize_all():
-    config = read_config(remote=True)
+@client_command(put_config=True, server_connect=False)
+def synchronize_all(config: dict):
     if not config:
         return
     if not config['synchronize']:
@@ -196,6 +210,36 @@ def synchronize_all():
         return
     print("Synchronizing...")
     check_call(['systemctl', 'restart', SERVICE_FILE_FWR_SYNC_NAME])
+
+
+@client_command()
+def rename(server: ClientCommand, rename_d: list):
+    res = server.rename(rename_d)
+    res, err = res.get('response'), res.get('err')
+    if err:
+        print(err)
+    if res:
+        print("Renamed successfully", ' -> '.join(rename_d))
+
+
+@client_command()
+def move(server: ClientCommand, move_d: list):
+    res = server.move(move_d)
+    res, err = res.get('response'), res.get('err')
+    if err:
+        print(err)
+    if res:
+        print("Moved successfully", ' -> '.join(move_d))
+
+
+@client_command()
+def copy(server: ClientCommand, copy_d: list):
+    res = server.copy(copy_d)
+    res, err = res.get('response'), res.get('err')
+    if err:
+        print(err)
+    if res:
+        print("Сopied successfully", ' -> '.join(copy_d))
 
 
 def remote_command(args):
@@ -213,7 +257,13 @@ def remote_command(args):
         synchronize(args.synchronize)
     elif args.synchronize_all:
         synchronize_all()
-    elif args.delete:
-        delete(args.delete)
+    elif args.remove:
+        remove(args.remove)
+    elif args.rename:
+        rename(args.rename)
+    elif args.move:
+        move(args.move)
+    elif args.copy:
+        copy(args.copy)
     else:
         show_config()

@@ -11,8 +11,9 @@ LINE_W = '│'
 
 
 class TableRender:
-    table = OrderedDict()
-    column_lens = OrderedDict()
+    def __init__(self):
+        self.table = OrderedDict()
+        self.column_lens = OrderedDict()
 
     def add_column(self, name: str):
         self.table[name] = []

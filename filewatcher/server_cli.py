@@ -1,7 +1,7 @@
-from jinja2 import Environment, PackageLoader
 from subprocess import check_call
 from os.path import isfile
 from getpass import getpass
+from filewatcher.templates import FWR_SERVER_SERVICE
 from filewatcher.utils import (
     update_config,
     read_config,
@@ -15,11 +15,9 @@ from filewatcher.utils import (
 
 
 def create_service_file() -> bool:
-    environment = Environment(loader=PackageLoader('filewatcher', 'templates'))
-    service_file = environment.get_template(SERVICE_FILE_FWR_SERVER_NAME).render()
     try:
         with open(SERVICE_FILE_FWR_SERVER, 'w') as file_:
-            file_.write(service_file)
+            file_.write(FWR_SERVER_SERVICE)
     except PermissionError as err:
         print(err)
         return False

@@ -5,6 +5,7 @@ After=network.target
 Type=notify
 ExecStart=/usr/local/bin/fwr-server
 Restart=always
+RestartSec=10
 
 
 [Install]

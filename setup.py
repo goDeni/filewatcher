@@ -5,6 +5,7 @@ setup(
     name='filewatcher',
     version='1.0',
     description='PO-411',
+    url='https://github.com/goDeni/filewatcher',
     packages=find_packages('.'),
     install_requires=[
         'systemd', 'jinja2', 'pyinotify'

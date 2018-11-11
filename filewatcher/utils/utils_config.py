@@ -52,5 +52,4 @@ def update_config(config_: dict, rewrite=False, remote_=False, server_=False) ->
         return True
     except PermissionError as err:
         print(err)
-        log.exception("Update config error")
     return False
