@@ -125,6 +125,8 @@ class ServerFwr:
         self.socket.close()
 
     def download(self, folder: str):
+        if '..' in folder:
+            return 0, "Invalid path"
         error = None
         download_path = os.path.join(self.directory, folder)
         path, name = os.path.split(folder)
@@ -144,13 +146,15 @@ class ServerFwr:
     def upload(self, path_info: dict):
         if path_info.get('isfile'):
             size, path, filename = path_info.get('size'), path_info.get('path'), path_info.get('filename')
-            if not os.path.isdir(os.path.join(self.directory, path)):
+            if not os.path.isdir(os.path.join(self.directory, path)) or '..' in path:
                 return None, "Invalid path {}".format(path)
             download_file(self.connection, size, os.path.join(self.directory, path, filename))
             return 1, None
         elif path_info.get('isfolder'):
             foldername, path, count_files = path_info.get('foldername'), path_info.get('path'), path_info.get(
                 'count_files')
+            if '..' in path:
+                return 0, "Invalid path {}".format(path)
             if path == '.':
                 path = ''
 
@@ -159,6 +163,8 @@ class ServerFwr:
         return None, "Invalid path info {}".format(path_info)
 
     def delete(self, delete_dir: str):
+        if '..' in delete_dir:
+            return 0, "Invalid path"
         if not delete_dir or delete_dir.startswith('/'):
             return 0, "Invalid path"
 
@@ -194,6 +200,8 @@ class ServerFwr:
 
     def rename(self, rename_d: list):
         old_name, new_name = rename_d
+        if ".." in old_name:
+            return 0, "Invalid path"
 
         if not os.path.exists(os.path.join(self.directory, old_name)):
             return 0, "{} not exist".format(old_name)
@@ -205,7 +213,7 @@ class ServerFwr:
 
     def move(self, move_d: list):
         object_move, move_destination = move_d
-        if object_move == '.':
+        if object_move == '.' or '..' in object_move:
             return 0, "Invalid path"
 
         obj_move = os.path.join(self.directory, object_move)
@@ -234,7 +242,7 @@ class ServerFwr:
 
     def copy(self, copy_d: list):
         copy_dir, copy_dst = copy_d
-        if copy_dir == '.':
+        if copy_dir == '.' or '..' in copy_dir:
             return 0, "Invalid path"
 
         copy_directory = os.path.join(self.directory, copy_dir)

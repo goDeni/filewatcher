@@ -16,7 +16,7 @@ from filewatcher.utils import (
     format_time,
     enter_path,
     SERVICE_FILE_FWR_SYNC_NAME,
-    SERVICE_FILE_FWR_SYNC
+    SERVICE_FILE_FWR_SYNC,
 )
 
 
@@ -47,9 +47,12 @@ def client_command(put_config=False, server_connect=True, synchronize_block=True
                 print("Remote server config doesn't exist")
                 return
             if server_connect:
-                server = ClientCommand(config['host'], config['port'], config['password'])
-                args = (server,) + args
-
+                try:
+                    server = ClientCommand(config['host'], config['port'], config['password'])
+                    args = (server,) + args
+                except ConnectionRefusedError:
+                    print("Unable to connect to server")
+                    return
             if put_config:
                 kwargs['config'] = config
 
@@ -88,7 +91,8 @@ def synchronize(status: str):
     if status:
         path_to_watch = enter_path('Enter absolute path to watching: ')
 
-    update_config({'synchronize': status, 'synchronize-path': path_to_watch}, remote_=True)
+    if not update_config({'synchronize': status, 'synchronize-path': path_to_watch}, remote_=True):
+        return
 
     check_call(['systemctl', 'enable' if status else 'disable', SERVICE_FILE_FWR_SYNC_NAME])
     check_call(['systemctl', 'restart' if status else 'stop', SERVICE_FILE_FWR_SYNC_NAME])

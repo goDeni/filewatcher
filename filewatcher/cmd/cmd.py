@@ -13,8 +13,8 @@ def parse_args():
     subparsers.required = True
 
     parser_server = subparsers.add_parser('server',
-                                           description="Work with server",
-                                           help="Work with server")
+                                          description="Work with server",
+                                          help="Work with server")
 
     parser_server.add_argument("--init",
                                action="store_true",

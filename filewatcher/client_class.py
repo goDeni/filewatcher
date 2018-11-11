@@ -78,8 +78,7 @@ class ClientCommand:
         self.send_command(Commands.DOWNLOAD.name, path_from, close_conn=False, wait_res=False)
         response = None
 
-        res = self.socket.recv(SIZE_POCKET).decode('utf-8')
-        res = loads(res)
+        res = loads(read_data(self.socket))
 
         if res.get('isfile'):
             filename, size = res.get('filename'), res.get('size')
