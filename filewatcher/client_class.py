@@ -5,13 +5,14 @@ from getpass import getpass
 from logging import getLogger
 
 from filewatcher.commands import Commands
-from filewatcher.utils.socket_utils import (
+from filewatcher.utils import (
     download_file,
     download_folder,
     SIZE_POCKET,
     send_file,
     send_folder,
     get_files,
+    get_folders,
     read_data,
 )
 
@@ -77,8 +78,7 @@ class ClientCommand:
         self.send_command(Commands.DOWNLOAD.name, path_from, close_conn=False, wait_res=False)
         response = None
 
-        res = self.socket.recv(SIZE_POCKET).decode('utf-8')
-        res = loads(res)
+        res = loads(read_data(self.socket))
 
         if res.get('isfile'):
             filename, size = res.get('filename'), res.get('size')
@@ -128,5 +128,15 @@ class ClientCommand:
 
     @reopen_client
     def check_tree(self, path: str):
-        three = list(get_files(path, True))
-        return self.send_command(Commands.CHECK_THREE.name, three)
+        three_files = list(get_files(path, is_root=True, get_size=True))
+        three_folders = list(get_folders(path, is_root=True))
+        return self.send_command(Commands.CHECK_THREE.name, {'files': three_files, 'folders': three_folders})
+
+    def rename(self, rename_d: list) -> dict:
+        return self.send_command(Commands.RENAME.name, rename_d)
+
+    def move(self, move_d: list) -> dict:
+        return self.send_command(Commands.MOVE.name, move_d)
+
+    def copy(self, copy_d: list) -> dict:
+        return self.send_command(Commands.COPY.name, copy_d)

@@ -35,6 +35,7 @@ def send_file(socket: socket_.socket, download_path: str, filename: str, path=''
     if not res:
         return "Success flag didn't receive"
     elif len(res) > 1:
+        log.debug(res)
         return loads(res)
 
     with open(download_path, 'rb') as file_:
@@ -98,7 +99,8 @@ def download_folder(socket: socket_.socket, download_path: str, count_files: int
         }).encode('utf-8'))
         return 0
 
-    socket.send('1'.encode('utf-8'))
+    if count_files:
+        socket.send('1'.encode('utf-8'))
     while count_files:
         file_info = loads(socket.recv(SIZE_POCKET).decode('utf-8'))
         size, path, filename = file_info.get('size'), file_info.get('path'), file_info.get('filename')

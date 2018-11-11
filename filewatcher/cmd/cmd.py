@@ -13,8 +13,8 @@ def parse_args():
     subparsers.required = True
 
     parser_server = subparsers.add_parser('server',
-                                           description="Work with server",
-                                           help="Work with server")
+                                          description="Work with server",
+                                          help="Work with server")
 
     parser_server.add_argument("--init",
                                action="store_true",
@@ -33,35 +33,44 @@ def parse_args():
                                choices=['enable', 'disable'],
                                nargs='?',
                                help="Enable or disable auto-start server")
-    parser_server.add_argument('--show-config',
+    parser_server.add_argument('-shc', '--show-config',
                                action='store_true',
                                help="Show server configuration")
 
     parser_remote = subparsers.add_parser('remote',
                                           description="Work with remote server",
                                           help="Work with client")
-    parser_remote.add_argument('--init',
+    parser_remote.add_argument('-i', '--init',
                                action='store_true',
                                help="Initialization server for remote access")
-    parser_remote.add_argument('--login',
+    parser_remote.add_argument('-l', '--login',
                                action='store_true',
                                help="Authorization on server")
-    parser_remote.add_argument('--show-folder',
+    parser_remote.add_argument('-shf', '--show-folder',
                                nargs='*',
                                help="Show files and folders in remote folder")
-    parser_remote.add_argument('--delete',
+    parser_remote.add_argument('-rm', '--remove',
                                nargs='+',
                                help="Delete files/folders in remote folder")
-    parser_remote.add_argument('--show-config',
+    parser_remote.add_argument('-rn', '--rename',
+                               nargs=2,
+                               help="Rename folder/file in remote folder")
+    parser_remote.add_argument('-mv', '--move',
+                               nargs=2,
+                               help="Moving folder/file on remote folder")
+    parser_remote.add_argument('-cp', '--copy',
+                               nargs=2,
+                               help="Copy folder/file on remote folder")
+    parser_remote.add_argument('-shc', '--show-config',
                                action='store_true',
                                help="Show client configuration")
-    parser_remote.add_argument('--download',
+    parser_remote.add_argument('-d', '--download',
                                nargs='+',
                                help="Download folders/files from server")
-    parser_remote.add_argument('--upload',
+    parser_remote.add_argument('-u', '--upload',
                                nargs='+',
                                help="Upload folders/files on server")
-    parser_remote.add_argument('--synchronize',
+    parser_remote.add_argument('-sync', '--synchronize',
                                choices=['enable', 'disable'],
                                nargs='?',
                                help="Enable or disable synchronization local folder with folder on the server")

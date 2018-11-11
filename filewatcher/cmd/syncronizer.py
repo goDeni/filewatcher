@@ -17,7 +17,6 @@ def main():
 
     status, path_to_watch = CONFIGURATION.get('synchronize'), CONFIGURATION.get('synchronize-path')
 
-    log.warning(CONFIGURATION)
     if not status:
         backend.systemd_notify(backend.READY)
         log.warning("Synchronize status: %s", status)

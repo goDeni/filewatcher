@@ -14,7 +14,8 @@ class FilesWatcher(pyinotify.ProcessEvent):
         self.path = path
         self.cut_n = len(path) + 1
         self.client = ClientCommand(host, port, password)
-        self.check_tree()
+        self.check_tree_th()
+        self.move_cache = None
 
         super().__init__()
 
@@ -23,7 +24,6 @@ class FilesWatcher(pyinotify.ProcessEvent):
         for d in os.listdir(self.path):
             self.client.upload(path_source=os.path.join(self.path, d), path_dist='.')
 
-    @run_forever(repeat_delay=300)
     def check_tree(self):
         log.warning("Checking three")
         res = self.client.check_tree(path=self.path)
@@ -35,13 +35,17 @@ class FilesWatcher(pyinotify.ProcessEvent):
             return
 
         for directory in res:
-            r = self.client.upload(path_source=os.path.join(self.path, directory), path_dist=os.path.split(directory)[0])
+            r = self.client.upload(path_source=os.path.join(self.path, directory),
+                                   path_dist=os.path.split(directory)[0])
             r, e = r.get('response'), r.get('err')
             if e:
                 log.warning("Error uploading file while checking three: %s", e)
             if r:
                 log.warning("File %s was uploaded", directory)
 
+    @run_forever(repeat_delay=300)
+    def check_tree_th(self):
+        self.check_tree()
 
     def process_IN_CLOSE_WRITE(self, event):
         path = event.pathname[self.cut_n:]
@@ -74,3 +78,9 @@ class FilesWatcher(pyinotify.ProcessEvent):
             self.client.delete(path)
         except Exception:
             log.exception("process_IN_DELETE error")
+
+    def process_IN_MOVED_FROM(self, event):
+        self.check_tree()
+
+    def process_IN_MOVED_TO(self, event):
+        self.check_tree()

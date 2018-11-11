@@ -5,6 +5,7 @@ After=network.target
 Type=notify
 ExecStart=/usr/local/bin/fwr-sync
 Restart=on-failure
+RestartSec=10
 
 
 [Install]
